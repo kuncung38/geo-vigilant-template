@@ -2,17 +2,10 @@ import { type FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { MonitoringNode } from "../api/client";
 
-/** Used until live node data arrives; must be a node that actually exists. */
 const FALLBACK_NODE_ID = "NODE-C4-A1";
 
 interface NavbarProps {
-  /**
-   * Node the "Sensor Clusters" entry opens. Driven by live data so the link
-   * cannot point at a decommissioned node — it previously hardcoded NODE-001,
-   * which broke once that demo record was removed.
-   */
   primaryNodeId?: string;
-  /** Real registry, so the location picker lists nodes that actually exist. */
   nodes?: MonitoringNode[];
 }
 
@@ -21,15 +14,12 @@ export function Navbar({ primaryNodeId, nodes = [] }: NavbarProps) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
-  // Search hands off to the map, which owns cluster filtering.
   function handleSearch(event: FormEvent) {
     event.preventDefault();
     const query = search.trim();
     navigate(query ? `/map?q=${encodeURIComponent(query)}` : "/map");
   }
 
-  // One label per entry: the sidebar previously rendered "DASHBOARD (OVERVIEW)"
-  // by concatenating two names for the same destination.
   const navItems = [
     { label: "Dasbor", path: "/", icon: "dashboard" },
     { label: "Topografi", path: "/map", icon: "map" },
@@ -42,7 +32,6 @@ export function Navbar({ primaryNodeId, nodes = [] }: NavbarProps) {
 
   return (
     <>
-      {/* TopNavBar */}
       <header className="bg-surface border-b border-outline-variant h-16 fixed top-0 w-full z-50">
         <div className="flex justify-between items-center w-full px-gutter max-w-container-max mx-auto h-full">
           <div className="flex items-center gap-4">
@@ -108,7 +97,6 @@ export function Navbar({ primaryNodeId, nodes = [] }: NavbarProps) {
         </div>
       </header>
 
-      {/* SideNavBar & Mobile Nav */}
       <aside className="hidden md:flex flex-col h-[calc(100vh-64px)] fixed top-16 left-0 p-4 gap-2 w-64 bg-surface-container-low border-r border-outline-variant z-40 shrink-0">
         <div className="px-2 py-4 mb-4">
           <div className="flex items-center gap-3">
@@ -162,7 +150,6 @@ export function Navbar({ primaryNodeId, nodes = [] }: NavbarProps) {
         </nav>
       </aside>
 
-      {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant flex justify-around items-center h-16 z-50">
         {navItems.map((item) => {
           const isActive =

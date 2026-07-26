@@ -14,12 +14,9 @@ export function NodeDetail() {
   const { data: telemetryLogs, isLoading: isTelemetryLoading } =
     useTelemetry(id);
 
-  // No invented stand-in node: showing a plausible "Normal" placeholder for a
-  // node we failed to load would misreport safety.
   const displayNode = node;
   const nodeStyle = conditionStyle(displayNode?.overallCondition);
 
-  // Calculate current readings from latest telemetry log if available
   const latestLog =
     telemetryLogs && telemetryLogs.length > 0 ? telemetryLogs[0] : null;
 
@@ -81,8 +78,6 @@ export function NodeDetail() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {SENSORS.map((sensor) => {
-          // Colour follows the actual reading. These cards were previously
-          // pinned to the "safe" green regardless of the value shown.
           const condition = latestLog ? sensor.condition(latestLog) : undefined;
           const cardStyle = conditionStyle(condition);
           return (

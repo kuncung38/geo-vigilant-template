@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useNodes } from "../hooks/useNodes";
 import { conditionStyle } from "../lib/telemetry";
 
-// MapLibre is ~800 kB; keep it off the dashboard bundle and load it with this route.
 const TerrainMap = lazy(() =>
   import("../components/TerrainMap").then((m) => ({ default: m.TerrainMap })),
 );
@@ -13,7 +12,6 @@ export function MapOverview() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
-  // Search is URL-driven so the navbar can hand a query over to this page.
   const searchQuery = searchParams.get("q") ?? "";
   const setSearchQuery = (value: string) => {
     const next = new URLSearchParams(searchParams);
@@ -22,8 +20,6 @@ export function MapOverview() {
     setSearchParams(next, { replace: true });
   };
 
-  // Only ever plot real nodes. The page used to fall back to three invented
-  // clusters, which rendered a healthy-looking network when the API was down.
   const displayNodes = nodes ?? [];
 
   const filteredNodes = displayNodes.filter(
@@ -37,14 +33,12 @@ export function MapOverview() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Page Header Actions */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface">
             Jaringan Klaster Sensor
           </h1>
           <p className="font-body-md text-on-surface-variant">
-            {/* Counted from the registry, not a fixed number that drifts. */}
             Status real-time {displayNodes.length} zona pemantauan geologi.
           </p>
         </div>
@@ -76,9 +70,7 @@ export function MapOverview() {
         </div>
       )}
 
-      {/* Primary Topographic Map Canvas */}
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden h-[600px] relative shadow-sm">
-        {/* Real 3D terrain canvas — MapLibre GL over OpenStreetMap + SRTM elevation */}
         <Suspense
           fallback={
             <div className="absolute inset-0 flex items-center justify-center bg-surface-container-low font-data-mono text-sm animate-pulse">
@@ -93,13 +85,7 @@ export function MapOverview() {
           />
         </Suspense>
 
-        {/*
-          Left-hand overlay column. Everything lives here because the app-level
-          alert toasts are pinned to the top-right and would otherwise sit on top
-          of the map's own controls.
-        */}
         <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-3 max-w-[calc(100%-2rem)]">
-          {/* Selected cluster readout */}
           {selectedNode && (
             <div className="w-64 rounded-lg border border-outline-variant bg-white/95 p-4 shadow-md backdrop-blur">
               <div className="flex items-start justify-between gap-2">
@@ -161,10 +147,6 @@ export function MapOverview() {
         </div>
       </div>
 
-      {/*
-        Legend sits below the map rather than floating over it: as an overlay it
-        competed with the map controls, the attribution and the alert toasts.
-      */}
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 shadow-sm">
         <p className="font-label-caps text-xs font-bold text-outline uppercase tracking-wider">
           Legenda Status Klaster
@@ -185,7 +167,6 @@ export function MapOverview() {
         </div>
       </div>
 
-      {/* Cluster Grid Summary Below Map */}
       <section className="bg-surface-container-lowest rounded-xl border border-outline-variant p-6 shadow-sm">
         <h2 className="font-headline-sm text-lg font-bold text-on-surface mb-4">
           Registri Klaster Aktif ({filteredNodes.length} Node)

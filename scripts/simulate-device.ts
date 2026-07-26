@@ -1,13 +1,5 @@
-/**
- * Stand-in for a field sensor: posts a reading to /api/telemetry exactly as a
- * real node would, using a bearer device token.
- *
- * This is the only way to exercise the ingestion path end-to-end — the dashboard
- * only ever reads. Run it against local dev or the deployed Worker.
- *
- * Usage:
- *   GV_TOKEN=<token> bun scripts/simulate-device.ts <NODE-ID> [--url <base>] [--condition Normal|Warning|Danger] [--watch <seconds>]
- */
+// Usage: GV_TOKEN=<token> bun scripts/simulate-device.ts <NODE-ID> [--url <base>]
+//        [--condition Normal|Warning|Danger] [--watch <seconds>]
 
 type Condition = "Normal" | "Warning" | "Danger";
 
@@ -18,7 +10,6 @@ const THRESHOLDS = {
   rainfall: { min: 0, max: 10 },
 };
 
-/** Values chosen to land in the requested band, mirroring the seed profiles. */
 function sample(condition: Condition) {
   switch (condition) {
     case "Danger":
@@ -45,10 +36,6 @@ function sample(condition: Condition) {
   }
 }
 
-/**
- * Derive a per-sensor condition from its own thresholds rather than trusting the
- * caller, so a device cannot report "Normal" while sending an out-of-range value.
- */
 export function classify(
   value: number,
   min: number,
@@ -130,7 +117,6 @@ export function buildReading(
   };
 }
 
-/** Continue the node's existing sequence so the unique (node, sequence) index holds. */
 async function nextSequence(baseUrl: string, nodeId: string): Promise<number> {
   const res = await fetch(
     `${baseUrl}/api/telemetry?nodeId=${encodeURIComponent(nodeId)}&limit=1`,

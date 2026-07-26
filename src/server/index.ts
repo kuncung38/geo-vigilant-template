@@ -16,9 +16,8 @@ app.notFound(async (c) => {
   if (c.req.path.startsWith("/api/")) {
     return c.json({ error: "Not Found" }, 404);
   }
-  // Client-side routes (/map, /nodes/:id) reach the Worker because no static asset
-  // matches them. Hand them to the assets binding, which applies the configured
-  // `not_found_handling: single-page-application` and returns index.html.
+  // Client routes reach the Worker because no asset matches; hand them back to
+  // the asset router so not_found_handling serves index.html.
   if (c.env?.ASSETS) {
     return c.env.ASSETS.fetch(c.req.raw);
   }

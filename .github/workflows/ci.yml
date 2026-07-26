@@ -5,7 +5,6 @@ on:
     branches: [main]
   pull_request:
 
-# A newer push to the same branch makes the in-flight run redundant.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -52,8 +51,6 @@ jobs:
       - name: Install Playwright browser
         run: bunx playwright install --with-deps chromium
 
-      # The e2e suite asserts against real node data, so the local D1 the dev
-      # server binds to must be migrated and seeded before Playwright starts it.
       - name: Prepare local database
         run: |
           bun run db:migrate:local

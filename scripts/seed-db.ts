@@ -1,15 +1,6 @@
-/**
- * Seed the D1 database through wrangler.
- *
- * Applying the seed with `wrangler d1 execute` means the target database comes
- * from wrangler's own config. The previous CLI opened the first *.sqlite file it
- * found under .wrangler/state — so once database_id changed (which every adopter
- * of this template does) it seeded a stale database and still printed success.
- *
- * Usage:
- *   bun scripts/seed-db.ts            # local dev database
- *   bun scripts/seed-db.ts --remote   # deployed D1 (careful)
- */
+// Usage: bun scripts/seed-db.ts [--remote]
+// Applies the seed via `wrangler d1 execute` so the target database comes from
+// wrangler config rather than guessing a local .sqlite file.
 
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";

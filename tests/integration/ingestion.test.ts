@@ -10,14 +10,6 @@ import * as schema from "../../src/db/schema";
 import { seedDatabase } from "../../src/db/seed";
 import { app } from "../../src/server/index";
 
-/**
- * End-to-end ingestion: a minted token must authenticate a device and its
- * reading must land in the database and update the node's condition.
- *
- * Production shipped with placeholder token hashes ("hash1"), which no token can
- * ever produce, so every device POST returned 401 and the system could not take
- * in data at all. These tests fail if that regresses.
- */
 describe("device telemetry ingestion", () => {
   let db: Database;
   let drizzleDb: ReturnType<typeof drizzle>;
@@ -84,7 +76,6 @@ describe("device telemetry ingestion", () => {
       .from(schema.monitoringNodes)
       .where(eq(schema.monitoringNodes.id, "NODE-C4-A1"));
 
-    // 64 hex chars. "hash1" — the value that shipped — fails this outright.
     expect(node.deviceTokenHash).toMatch(/^[0-9a-f]{64}$/);
   });
 
@@ -115,8 +106,6 @@ describe("device telemetry ingestion", () => {
   });
 
   it("attributes the reading to the token's own node, not a caller-supplied id", async () => {
-    // The route takes nodeId from the authenticated token, so a device cannot
-    // write telemetry on another node's behalf.
     const token = await installToken("NODE-S1-B2");
     const reading = {
       ...buildReading("Normal", 5003, Math.floor(Date.now() / 1000)),

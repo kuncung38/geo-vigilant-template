@@ -1,6 +1,5 @@
 import * as schema from "./schema";
 
-// Create crypto hash in browser/worker friendly way or fallback to node
 async function sha256(message: string) {
   if (typeof crypto !== "undefined" && crypto.subtle) {
     const msgBuffer = new TextEncoder().encode(message);
@@ -14,11 +13,6 @@ async function sha256(message: string) {
 
 type Condition = "Normal" | "Warning" | "Danger";
 
-/**
- * The West Java landslide corridor this system actually monitors. These mirror
- * the production node registry, so a seeded local database behaves like the
- * deployed one.
- */
 const SEED_NODES: ReadonlyArray<{
   id: string;
   name: string;
@@ -53,7 +47,6 @@ const RADON_MAX = 100;
 const RADON_DANGER = 350;
 const GYRO_MAX = 1;
 
-/** Readings sized to land in the given band, matching the dashboard legend. */
 function reading(condition: Condition) {
   switch (condition) {
     case "Danger":
@@ -80,10 +73,6 @@ function reading(condition: Condition) {
   }
 }
 
-/**
- * Build the rows once so drizzle (tests, in-process seeding) and the SQL
- * generator used by the CLI cannot drift apart.
- */
 export async function buildSeedRows(now = Math.floor(Date.now() / 1000)) {
   const baseTime = now - 24 * 3600; // 24 hours of history
   const nodes = [];
@@ -103,8 +92,6 @@ export async function buildSeedRows(now = Math.floor(Date.now() / 1000)) {
     });
 
     for (let i = 0; i < 24; i++) {
-      // Sites sit stable for most of the window and escalate near the end, so
-      // the telemetry chart shows a trend rather than a flat line.
       const escalated = i >= 18;
       const condition: Condition = escalated ? node.condition : "Normal";
       const value = reading(condition);
@@ -158,13 +145,6 @@ function sqlValue(value: string | number): string {
     : `'${value.replace(/'/g, "''")}'`;
 }
 
-/**
- * The same seed data as INSERT statements, so it can be applied through
- * `wrangler d1 execute`. That resolves the target database from wrangler's own
- * config instead of guessing which local .sqlite file to open — the previous CLI
- * picked the first file in the miniflare directory, so after any database_id
- * change it silently seeded the wrong database and still reported success.
- */
 export async function buildSeedSql(): Promise<string> {
   const { nodes, logs } = await buildSeedRows();
   const statements: string[] = [];

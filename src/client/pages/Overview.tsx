@@ -10,7 +10,6 @@ import {
   thresholdRatio,
 } from "../lib/telemetry";
 
-/** Selectable history windows, in hours. */
 const RANGES = [
   { label: "1 Jam Terakhir", hours: 1 },
   { label: "24 Jam Terakhir", hours: 24 },
@@ -33,16 +32,11 @@ export function Overview() {
   const style = conditionStyle(primaryNode?.overallCondition);
   const isLoading = isNodesLoading || isTelemetryLoading;
 
-  // Newest first (the API orders by receivedAt desc), filtered to the window.
   const nowSeconds = Math.floor(Date.now() / 1000);
   const cutoff = nowSeconds - rangeHours * 3600;
   const rangedLogs = (logs ?? []).filter((l) => l.deviceTimestamp >= cutoff);
   const latest = rangedLogs[0] ?? logs?.[0];
 
-  // The cards fall back to the last known reading even when it predates the
-  // selected window, so it must be labelled: presenting a two-year-old value
-  // under "SENSOR REAL-TIME" as if it were current is exactly the kind of thing
-  // a safety dashboard must not do.
   const isStale = Boolean(latest && latest.deviceTimestamp < cutoff);
 
   const pageCount = Math.max(1, Math.ceil(rangedLogs.length / ROWS_PER_PAGE));
@@ -54,7 +48,6 @@ export function Overview() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Overall Risk Banner */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
         <div>
           <h1 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface mb-1">
@@ -64,7 +57,6 @@ export function Overview() {
               : "Menunggu data node"}
           </h1>
           <p className="font-body-md text-on-surface-variant">
-            {/* Sourced from the reading itself, not the render clock. */}
             {latest
               ? `Update terakhir: ${formatDateTime(latest.receivedAt)} WIB`
               : "Belum ada pembacaan sensor"}
@@ -103,7 +95,6 @@ export function Overview() {
         </div>
       ) : null}
 
-      {/* Real-Time Sensor Grid */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="font-label-caps text-xs font-bold uppercase tracking-wider text-on-surface-variant">
@@ -150,7 +141,6 @@ export function Overview() {
                   </span>
                 </div>
 
-                {/* Fill tracks the reading against its own safety threshold. */}
                 <div className="w-full h-2 bg-surface-container-high rounded-full mt-4 overflow-hidden">
                   <div
                     className={`h-full transition-all duration-500 ${sensorStyle.dot}`}
@@ -168,7 +158,6 @@ export function Overview() {
         </div>
       </section>
 
-      {/* Historical Data Table */}
       <section className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
         <div className="p-6 border-b border-outline-variant flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>

@@ -3,12 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { MonitoringNode } from "../api/client";
 import { conditionStyle } from "../lib/telemetry";
 
-/**
- * Free, key-less 3D map stack:
- *  - Basemap  : OpenFreeMap vector tiles (OpenStreetMap data, unlimited, no API key)
- *  - Elevation: AWS Open Data "Terrain Tiles" (Tilezen/Mapzen terrarium DEM, no API key)
- * Both are CORS-open and require no account, so nothing here needs a secret.
- */
 const BASEMAPS = {
   positron: {
     label: "Klinis",
@@ -36,7 +30,6 @@ const TERRAIN_SOURCE = "geo-vigilant-dem";
 const HILLSHADE_SOURCE = "geo-vigilant-dem-hillshade";
 const HILLSHADE_LAYER = "geo-vigilant-hillshade";
 
-/** The subset of a monitoring node the map actually needs to plot it. */
 export interface MapNode {
   id: string;
   name: string;
@@ -45,7 +38,6 @@ export interface MapNode {
   overallCondition: MonitoringNode["overallCondition"];
 }
 
-/** Camera framing for West Java's landslide corridor when no nodes are loaded yet. */
 const FALLBACK_CENTER: [number, number] = [107.55, -6.95];
 
 interface TerrainMapProps {
@@ -71,14 +63,11 @@ export function TerrainMap({
   const [isReady, setIsReady] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
 
-  // Latest view settings, readable from callbacks without re-running the setup effects.
   const viewRef = useRef({ is3D, exaggeration });
   viewRef.current = { is3D, exaggeration };
 
-  /**
-   * Terrain/hillshade/sky live outside the OpenFreeMap style document, so they must be
-   * re-applied every time the style is swapped (setStyle discards custom sources).
-   */
+  // setStyle discards sources and layers not in the style document, so terrain,
+  // hillshade and sky must be re-applied after every basemap swap.
   const applyTerrain = useCallback(
     (map: maplibregl.Map, exaggerationValue: number, enabled: boolean) => {
       if (!map.getSource(TERRAIN_SOURCE)) {
@@ -91,10 +80,9 @@ export function TerrainMap({
           attribution: DEM_ATTRIBUTION,
         });
       }
-      // A dedicated source for hillshading keeps relief crisp while terrain is re-tiled.
-      // It carries the DEM attribution too: MapLibre only credits sources that a
-      // visible layer draws from, and the terrain source has no layer of its own.
       if (!map.getSource(HILLSHADE_SOURCE)) {
+        // Carries the DEM attribution: MapLibre only credits sources a visible
+        // layer draws from, and the terrain source has no layer of its own.
         map.addSource(HILLSHADE_SOURCE, {
           type: "raster-dem",
           tiles: [TERRARIUM_TILES],
@@ -106,7 +94,6 @@ export function TerrainMap({
       }
 
       if (!map.getLayer(HILLSHADE_LAYER)) {
-        // Slide the relief under the first label layer so place names stay readable.
         const firstSymbol = map
           .getStyle()
           .layers?.find((layer) => layer.type === "symbol")?.id;
@@ -145,7 +132,6 @@ export function TerrainMap({
     [],
   );
 
-  // Create the map once; style/terrain changes are applied through dedicated effects.
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
@@ -159,13 +145,10 @@ export function TerrainMap({
         pitch: 62,
         bearing: -17,
         maxPitch: 85,
-        // Placed manually below so it shares the top-right stack and can never be
-        // clipped by the app's bottom-right alert toasts (OSM/DEM credit must stay visible).
         attributionControl: false,
         canvasContextAttributes: { antialias: true },
       });
     } catch (err) {
-      // Typically a WebGL-unavailable environment (headless browser, blocked GPU).
       setFailure(err instanceof Error ? err.message : "WebGL is unavailable");
       return;
     }
@@ -192,7 +175,6 @@ export function TerrainMap({
     });
 
     map.on("error", (event) => {
-      // Tile hiccups are transient and self-heal; surface only hard style failures.
       if (event.error?.message) setFailure(event.error.message);
     });
 
@@ -204,11 +186,9 @@ export function TerrainMap({
     };
   }, [applyTerrain]);
 
-  // Swap basemap style, then restore terrain (setStyle wipes non-style sources/layers).
   const appliedBasemapRef = useRef<BasemapId>("positron");
   useEffect(() => {
     const map = mapRef.current;
-    // Skip the initial pass: the map was constructed with this style already.
     if (!map || !isReady || appliedBasemapRef.current === basemap) return;
     appliedBasemapRef.current = basemap;
     map.setStyle(BASEMAPS[basemap].url);
@@ -217,7 +197,6 @@ export function TerrainMap({
     );
   }, [basemap, isReady, applyTerrain]);
 
-  // Toggle between the pitched 3D view and a flat operational plan view.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isReady) return;
@@ -229,7 +208,6 @@ export function TerrainMap({
     });
   }, [is3D, exaggeration, isReady]);
 
-  // Sync markers with live node data.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isReady) return;
@@ -293,7 +271,6 @@ export function TerrainMap({
     }
   }, [nodes, isReady]);
 
-  // Highlight the active node without re-creating markers.
   useEffect(() => {
     for (const [id, marker] of markersRef.current) {
       marker
@@ -302,16 +279,11 @@ export function TerrainMap({
     }
   }, [selectedNodeId]);
 
-  // Frame the monitored region once data arrives.
   const fittedRef = useRef(false);
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isReady || fittedRef.current || nodes.length === 0) return;
 
-    // Frame the main cluster, not every outlier. A single stray node (a demo or
-    // mis-seeded record on the far side of the world) would otherwise force a
-    // useless whole-globe view. Outliers stay plotted; they just don't drive
-    // the camera.
     const framed = nodesNearMedian(nodes);
 
     const bounds = new maplibregl.LngLatBounds();
@@ -348,10 +320,6 @@ export function TerrainMap({
         data-testid="terrain-map"
       />
 
-      {/*
-        View controls sit top-left: the app's alert toasts are pinned to the
-        top-right of the viewport and would cover them there.
-      */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 items-start">
         <div className="flex overflow-hidden rounded-lg border border-outline-variant bg-white/95 shadow-sm backdrop-blur">
           <button
@@ -417,12 +385,6 @@ export function TerrainMap({
   );
 }
 
-/**
- * Nodes within `maxDegrees` of the median position — the geographic bulk of the
- * network. The median (rather than the mean) keeps a distant outlier from
- * dragging the reference point toward itself. Falls back to the full set when
- * the nodes are genuinely spread out.
- */
 export function nodesNearMedian(nodes: MapNode[], maxDegrees = 5): MapNode[] {
   if (nodes.length < 3) return nodes;
 

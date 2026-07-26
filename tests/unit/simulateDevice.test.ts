@@ -19,7 +19,6 @@ describe("device reading classification", () => {
   });
 
   it("treats a reading below the minimum as Danger, not Normal", () => {
-    // A sensor reading under its floor is a fault, not a healthy value.
     expect(classify(-5, 0, 100, 350)).toBe("Danger");
   });
 

@@ -24,7 +24,6 @@ export function AppContent() {
       <Navbar primaryNodeId={nodes?.[0]?.id} nodes={nodes} />
       <AlertSystem nodes={nodes} />
       <div className="flex pt-16 min-h-screen pb-16 md:pb-0">
-        {/* pb-40 keeps page content clear of the fixed alert stack (bottom-right). */}
         <main className="flex-1 md:ml-64 overflow-y-auto p-gutter md:p-margin-desktop pb-40 md:pb-40 bg-background">
           <Routes>
             <Route path="/" element={<Overview />} />

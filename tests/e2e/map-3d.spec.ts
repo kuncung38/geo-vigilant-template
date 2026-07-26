@@ -1,10 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-/**
- * Guards the real 3D map: MapLibre must boot, pull free elevation tiles, and plot
- * live sensor clusters. These assertions fail if the page ever regresses back to a
- * static placeholder image.
- */
 test.describe("3D terrain map", () => {
   test("renders MapLibre terrain with free, key-less tile sources", async ({
     page,
@@ -19,13 +14,9 @@ test.describe("3D terrain map", () => {
 
     await page.goto("/map");
 
-    // MapLibre's WebGL canvas replaces the old background-image div.
     const canvas = page.locator(".maplibregl-canvas");
     await expect(canvas).toBeVisible();
 
-    // Sensor clusters are real georeferenced markers, not absolutely-positioned divs.
-    // The count tracks whatever the API returns (seeded D1 and the offline fallback
-    // differ), so compare against the registry rather than hardcoding a number.
     const registry = page.getByRole("heading", {
       name: /Registri Klaster Aktif/i,
     });
@@ -38,19 +29,15 @@ test.describe("3D terrain map", () => {
       page.locator("main").getByText("Cianjur Sektor 4").first(),
     ).toBeVisible();
 
-    // Elevation data must actually stream in — this is what makes the map 3D.
     await expect
       .poll(() => demRequests.length, { timeout: 20000 })
       .toBeGreaterThan(0);
     expect(basemapRequests.length).toBeGreaterThan(0);
 
-    // No request may carry an API key/token: the whole stack is key-less.
     for (const url of [...demRequests, ...basemapRequests]) {
       expect(url).not.toMatch(/[?&](key|api_key|access_token|token)=/i);
     }
 
-    // Attribution for OSM and the DEM provider must be present (read without
-    // toggling the control, which starts expanded).
     const attribution = await page
       .locator(".maplibregl-ctrl-attrib-inner")
       .textContent();
@@ -63,7 +50,6 @@ test.describe("3D terrain map", () => {
     await expect(page.locator(".maplibregl-canvas")).toBeVisible();
     await expect(page.locator(".gv-marker").first()).toBeVisible();
 
-    // MapLibre mirrors the camera pitch onto the compass icon's 3D transform.
     const compass = page.locator(
       ".maplibregl-ctrl-compass .maplibregl-ctrl-icon",
     );
@@ -71,12 +57,10 @@ test.describe("3D terrain map", () => {
       .poll(async () => await compass.getAttribute("style"), { timeout: 15000 })
       .toMatch(/rotateX\((?!0deg)/);
 
-    // Relief control is only meaningful while terrain is on.
     await expect(page.getByLabel("Pembesaran relief")).toBeVisible();
 
     await page.getByRole("button", { name: "2D", exact: true }).click();
 
-    // Flattening removes the pitch and hides the relief control.
     await expect
       .poll(async () => await compass.getAttribute("style"), { timeout: 15000 })
       .toMatch(/rotateX\(0deg\)/);

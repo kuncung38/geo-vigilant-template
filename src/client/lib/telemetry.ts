@@ -2,11 +2,6 @@ import type { TelemetryLog } from "../api/client";
 
 export type Condition = "Normal" | "Warning" | "Danger";
 
-/**
- * Single source of truth for status presentation. Every page previously
- * re-derived these colours inline, which is how metric cards ended up painted
- * green regardless of the reading they displayed.
- */
 export const CONDITION_STYLES: Record<
   Condition,
   {
@@ -55,17 +50,12 @@ export function conditionStyle(condition: string | undefined) {
   );
 }
 
-/** Sensor readings are floats; raw values like 43.87774903808943 are unreadable. */
 export function formatReading(value: number | undefined, digits = 1): string {
   if (value === undefined || value === null || Number.isNaN(value)) return "—";
   return value.toFixed(digits);
 }
 
-/**
- * Timestamps are stored as UNIX *seconds*. Passing them straight to `new Date()`
- * (which expects milliseconds) put every reading in January 1970 and collapsed
- * the chart's x-axis to a single repeated label.
- */
+/** Timestamps are stored as UNIX seconds; Date expects milliseconds. */
 export function toDate(unixSeconds: number): Date {
   return new Date(unixSeconds * 1000);
 }
@@ -87,7 +77,6 @@ export function formatDateTime(unixSeconds: number): string {
   });
 }
 
-/** The four sensors, so cards/tables/charts stay in step across pages. */
 export const SENSORS = [
   {
     key: "radon" as const,
@@ -145,7 +134,6 @@ export const SENSORS = [
 
 export type SensorKey = (typeof SENSORS)[number]["key"];
 
-/** Percentage of the way to the max threshold, clamped for gauge rendering. */
 export function thresholdRatio(
   value: number,
   min: number,

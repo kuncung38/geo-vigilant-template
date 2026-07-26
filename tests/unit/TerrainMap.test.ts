@@ -4,7 +4,6 @@ import {
   nodesNearMedian,
 } from "../../src/client/components/TerrainMap";
 
-// Importing the module pulls in maplibre-gl; the camera helper under test is pure.
 vi.mock("maplibre-gl", () => ({ default: {} }));
 
 const node = (id: string, latitude: number, longitude: number): MapNode => ({
@@ -23,8 +22,6 @@ describe("nodesNearMedian", () => {
   ];
 
   it("drops a far-flung outlier so it cannot force a whole-globe view", () => {
-    // Regression: a seeded "Demo Node" in San Francisco zoomed the production
-    // map all the way out, hiding the West Java sensor network.
     const withDemoNode = [...westJava, node("demo", 37.7749, -122.4194)];
 
     const framed = nodesNearMedian(withDemoNode);
@@ -42,7 +39,6 @@ describe("nodesNearMedian", () => {
   });
 
   it("falls back to the full set rather than framing nothing", () => {
-    // Three mutually distant nodes: no cluster to prefer, so frame them all.
     const scattered = [
       node("a", -6.8, 107.1),
       node("b", 37.7, -122.4),

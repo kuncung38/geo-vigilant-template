@@ -5,9 +5,6 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MapOverview } from "../../src/client/pages/MapOverview";
 
-// jsdom has no WebGL context, so the real MapLibre renderer cannot boot here.
-// Stub the map surface and assert the page wiring around it; the live terrain
-// render is covered by the Playwright e2e suite instead.
 vi.mock("maplibre-gl", () => {
   class FakeMarker {
     private element = document.createElement("div");
@@ -140,7 +137,6 @@ describe("MapOverview Page Component", () => {
     expect(screen.getByText(/Legenda Status Klaster/i)).toBeTruthy();
   });
 
-  // The map is lazy-loaded, so these assertions await the Suspense boundary.
   it("mounts the terrain map canvas with 3D and basemap controls", async () => {
     render(
       <QueryClientProvider client={queryClient}>

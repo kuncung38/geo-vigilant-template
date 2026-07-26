@@ -51,8 +51,6 @@ describe("Database Seed Script", () => {
   });
 
   it("seeds every node inside the monitored region, never off-continent", async () => {
-    // Regression: a demo node at 37.7749,-122.4194 (San Francisco) shipped to
-    // production and stretched the map's auto-framing to a whole-globe view.
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     await seedDatabase(drizzleDb as any);
 
@@ -66,8 +64,6 @@ describe("Database Seed Script", () => {
   });
 
   it("generates SQL that produces the same data as the drizzle seed", async () => {
-    // db:seed:local applies this SQL through wrangler so the target database
-    // comes from wrangler's config rather than guessing a local .sqlite file.
     const sql = await buildSeedSql();
     for (const statement of sql.split("\n")) {
       if (statement.trim()) db.exec(statement);

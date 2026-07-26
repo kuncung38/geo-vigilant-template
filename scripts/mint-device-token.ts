@@ -1,21 +1,6 @@
-/**
- * Mint a device token for a monitoring node.
- *
- * Nodes seeded before this script carried placeholder hashes ("hash1"), which no
- * token can ever produce — so every device POST to /api/telemetry returned 401
- * and the system could not ingest data at all.
- *
- * The plaintext token is printed once and never stored: only its SHA-256 goes in
- * the database, which is what `authMiddleware` compares against. A 256-bit random
- * token needs no password-style KDF — there is nothing to brute force.
- *
- * Usage:
- *   bun scripts/mint-device-token.ts <NODE-ID> [--local|--remote]
- *
- * Emits the UPDATE statement to stdout and the token to stderr, so you can pipe
- * SQL somewhere safe without the secret following it:
- *   bun scripts/mint-device-token.ts NODE-C4-A1 > rotate.sql
- */
+// Usage: bun scripts/mint-device-token.ts <NODE-ID>
+// Prints the UPDATE to stdout and the token to stderr, so redirecting the SQL
+// does not capture the secret. Only the SHA-256 is stored.
 
 const HEX = "0123456789abcdef";
 
@@ -39,7 +24,6 @@ async function sha256Hex(message: string): Promise<string> {
     .join("");
 }
 
-/** Single quotes are the only SQL metacharacter reachable from these values. */
 function sqlQuote(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
 }
@@ -70,7 +54,6 @@ if (import.meta.main) {
   }
 
   const { token, sql } = await mintToken(nodeId);
-  // SQL on stdout (safe to redirect), secret on stderr (never redirected away).
   console.log(sql);
   console.error(`\n  node : ${nodeId}`);
   console.error(`  token: ${token}`);

@@ -49,7 +49,6 @@ describe("GET /api/telemetry", () => {
       receivedAt: number;
     }>;
     expect(json.length).toBe(24);
-    // Verified descending order by receivedAt
     expect(json[0].receivedAt).toBeGreaterThanOrEqual(json[1].receivedAt);
   });
 

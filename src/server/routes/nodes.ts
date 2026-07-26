@@ -6,11 +6,6 @@ import type { AppEnv } from "../types";
 
 const nodesRoute = new Hono<AppEnv>();
 
-/**
- * getDb() is intentionally untyped so it can back either D1 or bun:sqlite, so
- * annotate query results here to keep the route type-safe — notably ensuring
- * deviceTokenHash is a known field that we strip before responding.
- */
 type MonitoringNodeRow = typeof monitoringNodes.$inferSelect;
 
 nodesRoute.get("/", async (c) => {

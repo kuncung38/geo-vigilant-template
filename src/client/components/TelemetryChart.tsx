@@ -44,12 +44,10 @@ export function TelemetryChart({ logs = [], isLoading }: TelemetryChartProps) {
     );
   }
 
-  // Sort chronologically ascending for the chart
   const chartData = [...logs]
     .sort((a, b) => a.deviceTimestamp - b.deviceTimestamp)
     .map((log) => {
       return {
-        // deviceTimestamp is in seconds; formatTime converts before formatting.
         timestamp: formatTime(log.deviceTimestamp),
         radon: log.radonValue,
         radonMax: log.radonMaxThreshold,
@@ -62,8 +60,6 @@ export function TelemetryChart({ logs = [], isLoading }: TelemetryChartProps) {
       };
     });
 
-  // Sensor metadata is shared with the dashboard cards so labels, units, icons
-  // and colours cannot drift between views.
   const sensorConfig = Object.fromEntries(
     SENSORS.map((sensor) => [
       sensor.key,
@@ -94,7 +90,6 @@ export function TelemetryChart({ logs = [], isLoading }: TelemetryChartProps) {
 
   return (
     <div className="space-y-6">
-      {/* Sensor Selector Tabs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {(Object.keys(sensorConfig) as SensorType[]).map((key) => {
           const config = sensorConfig[key];
@@ -124,7 +119,6 @@ export function TelemetryChart({ logs = [], isLoading }: TelemetryChartProps) {
         })}
       </div>
 
-      {/* Chart Canvas */}
       <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
         <div className="flex justify-between items-center mb-6">
           <div>
