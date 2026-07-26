@@ -20,10 +20,45 @@ export interface MonitoringNode {
   updatedAt: number;
 }
 
+export interface TelemetryLog {
+  id: number;
+  monitoringNodeId: string;
+  sequence: number;
+  deviceTimestamp: number;
+  receivedAt: number;
+  radonValue: number;
+  radonCondition: "Normal" | "Warning" | "Danger";
+  radonMinThreshold: number;
+  radonMaxThreshold: number;
+  soilMoistureValue: number;
+  soilMoistureCondition: "Normal" | "Warning" | "Danger";
+  soilMoistureMinThreshold: number;
+  soilMoistureMaxThreshold: number;
+  gyroValue: number;
+  gyroCondition: "Normal" | "Warning" | "Danger";
+  gyroMinThreshold: number;
+  gyroMaxThreshold: number;
+  rainfallValue: number;
+  rainfallCondition: "Normal" | "Warning" | "Danger";
+  rainfallMinThreshold: number;
+  rainfallMaxThreshold: number;
+  overallCondition: "Normal" | "Warning" | "Danger";
+  isLandslide: number;
+}
+
 export async function getNodes(): Promise<MonitoringNode[]> {
   return fetchApi<MonitoringNode[]>("/api/nodes");
 }
 
 export async function getNode(id: string): Promise<MonitoringNode> {
   return fetchApi<MonitoringNode>(`/api/nodes/${id}`);
+}
+
+export async function getTelemetry(
+  nodeId: string,
+  limit = 50,
+): Promise<TelemetryLog[]> {
+  return fetchApi<TelemetryLog[]>(
+    `/api/telemetry?nodeId=${encodeURIComponent(nodeId)}&limit=${limit}`,
+  );
 }

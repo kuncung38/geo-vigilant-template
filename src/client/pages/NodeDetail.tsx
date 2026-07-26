@@ -1,9 +1,12 @@
 import { Link, useParams } from "react-router-dom";
+import { TelemetryChart } from "../components/TelemetryChart";
 import { useNode } from "../hooks/useNodes";
+import { useTelemetry } from "../hooks/useTelemetry";
 
 export function NodeDetail() {
   const { id } = useParams<{ id: string }>();
-  const { data: node, isLoading, error } = useNode(id);
+  const { data: node, isLoading: isNodeLoading, error: nodeError } = useNode(id);
+  const { data: telemetryLogs, isLoading: isTelemetryLoading } = useTelemetry(id);
 
   const displayNode = node || {
     id: id || "NODE-C4-A1",
@@ -15,6 +18,9 @@ export function NodeDetail() {
 
   const isSafe = displayNode.overallCondition === "Normal";
   const isWarning = displayNode.overallCondition === "Warning";
+
+  // Calculate current readings from latest telemetry log if available
+  const latestLog = telemetryLogs && telemetryLogs.length > 0 ? telemetryLogs[0] : null;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -57,49 +63,63 @@ export function NodeDetail() {
         </div>
       </div>
 
-      {isLoading ? (
+      {isNodeLoading ? (
         <div className="p-8 text-center text-on-surface-variant font-data-mono">
           Memuat data diagnostik node...
         </div>
-      ) : error ? (
+      ) : nodeError ? (
         <div className="p-6 bg-error-container text-on-error-container rounded-xl border border-error/20">
-          Gagal memuat data node: {error.message}
+          Gagal memuat data node: {nodeError.message}
         </div>
       ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
           <h3 className="font-label-caps text-xs text-on-surface-variant">KONSENTRASI RADON</h3>
-          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">45.2 Bq/m³</p>
-          <div className="mt-2 text-xs text-emerald-600 font-bold">Normal (0 - 100)</div>
+          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">
+            {latestLog ? `${latestLog.radonValue} Bq/m³` : "45.2 Bq/m³"}
+          </p>
+          <div className="mt-2 text-xs text-emerald-600 font-bold">
+            {latestLog ? `Ambang: ${latestLog.radonMaxThreshold}` : "Normal (0 - 100)"}
+          </div>
         </div>
 
         <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
           <h3 className="font-label-caps text-xs text-on-surface-variant">KELEMBABAN TANAH</h3>
-          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">40.5 %</p>
-          <div className="mt-2 text-xs text-emerald-600 font-bold">Normal (20 - 80)</div>
+          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">
+            {latestLog ? `${latestLog.soilMoistureValue} %` : "40.5 %"}
+          </p>
+          <div className="mt-2 text-xs text-emerald-600 font-bold">
+            {latestLog ? `Ambang: ${latestLog.soilMoistureMaxThreshold}` : "Normal (20 - 80)"}
+          </div>
         </div>
 
         <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
           <h3 className="font-label-caps text-xs text-on-surface-variant">KEMIRINGAN / GYRO</h3>
-          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">0.15 °/s</p>
-          <div className="mt-2 text-xs text-emerald-600 font-bold">Normal (-1 - 1)</div>
+          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">
+            {latestLog ? `${latestLog.gyroValue} °/s` : "0.15 °/s"}
+          </p>
+          <div className="mt-2 text-xs text-emerald-600 font-bold">
+            {latestLog ? `Ambang: ${latestLog.gyroMaxThreshold}` : "Normal (-1 - 1)"}
+          </div>
         </div>
 
         <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
           <h3 className="font-label-caps text-xs text-on-surface-variant">CURAH HUJAN</h3>
-          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">0.5 mm/h</p>
-          <div className="mt-2 text-xs text-emerald-600 font-bold">Normal (0 - 10)</div>
+          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">
+            {latestLog ? `${latestLog.rainfallValue} mm/h` : "0.5 mm/h"}
+          </p>
+          <div className="mt-2 text-xs text-emerald-600 font-bold">
+            {latestLog ? `Ambang: ${latestLog.rainfallMaxThreshold}` : "Normal (0 - 10)"}
+          </div>
         </div>
       </div>
 
       <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
-        <h2 className="font-headline-sm text-lg font-bold text-on-surface mb-4">
-          Riwayat Telemetri (Live Chart Placeholder)
+        <h2 className="font-headline-sm text-lg font-bold text-on-surface mb-6">
+          Riwayat Telemetri & Analitik Sensor Waktu Nyata
         </h2>
-        <div className="h-64 rounded-xl bg-surface-container-low border border-outline-variant flex items-center justify-center text-on-surface-variant font-data-mono text-sm">
-          Chart visualizations will be initialized in Task 10
-        </div>
+        <TelemetryChart logs={telemetryLogs} isLoading={isTelemetryLoading} />
       </div>
     </div>
   );
