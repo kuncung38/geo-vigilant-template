@@ -1,10 +1,14 @@
 import { Hono } from "hono";
+import telemetryRoute from "./routes/telemetry";
+import type { AppEnv } from "./types";
 
-const app = new Hono();
+const app = new Hono<AppEnv>();
 
 app.get("/api/health", (c) => {
   return c.json({ status: "ok" });
 });
+
+app.route("/api/telemetry", telemetryRoute);
 
 app.notFound((c) => {
   if (c.req.path.startsWith("/api/")) {
