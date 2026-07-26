@@ -24,10 +24,10 @@ describe("useNodes Hook", () => {
   it("fetches and returns list of monitoring nodes", async () => {
     const mockNodes = [
       {
-        id: "NODE-001",
-        name: "Demo Node",
-        latitude: 37.7749,
-        longitude: -122.4194,
+        id: "NODE-C4-A1",
+        name: "Cianjur Sektor 4",
+        latitude: -6.8168,
+        longitude: 107.1425,
         overallCondition: "Normal",
       },
     ];

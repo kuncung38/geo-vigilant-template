@@ -30,7 +30,7 @@ describe("App Component Routing", () => {
   });
 
   it("renders NodeDetail page on route /nodes/:id", () => {
-    renderWithProviders("/nodes/NODE-001");
+    renderWithProviders("/nodes/NODE-C4-A1");
     expect(screen.getByText(/Diagnostik Sensor:/i)).toBeTruthy();
   });
 });

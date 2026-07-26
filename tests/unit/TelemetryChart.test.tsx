@@ -15,7 +15,7 @@ beforeAll(() => {
 const sampleLogs: TelemetryLog[] = [
   {
     id: 1,
-    monitoringNodeId: "NODE-001",
+    monitoringNodeId: "NODE-C4-A1",
     sequence: 1,
     deviceTimestamp: 1716561000000,
     receivedAt: 1716561001000,

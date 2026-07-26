@@ -71,7 +71,7 @@ describe("POST /api/telemetry", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer demo-token",
+          Authorization: "Bearer NODE-C4-A1-token",
         },
         body: JSON.stringify({ sequence: "invalid" }),
       },
@@ -111,7 +111,7 @@ describe("POST /api/telemetry", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer demo-token",
+          Authorization: "Bearer NODE-C4-A1-token",
         },
         body: JSON.stringify(payload),
       },

@@ -12,64 +12,137 @@ async function sha256(message: string) {
   return createHash("sha256").update(message).digest("hex");
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export async function seedDatabase(db: any) {
-  const nodeHash = await sha256("demo-token");
+type Condition = "Normal" | "Warning" | "Danger";
 
-  const now = Math.floor(Date.now() / 1000);
+/**
+ * The West Java landslide corridor this system actually monitors. These mirror
+ * the production node registry, so a seeded local database behaves like the
+ * deployed one.
+ */
+const SEED_NODES: ReadonlyArray<{
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  condition: Condition;
+}> = [
+  {
+    id: "NODE-C4-A1",
+    name: "Cianjur Sektor 4",
+    latitude: -6.8168,
+    longitude: 107.1425,
+    condition: "Normal",
+  },
+  {
+    id: "NODE-S1-B2",
+    name: "Sumedang Zona B",
+    latitude: -6.858,
+    longitude: 107.92,
+    condition: "Warning",
+  },
+  {
+    id: "NODE-G2-D1",
+    name: "Garut Sektor Delta",
+    latitude: -7.21,
+    longitude: 107.9,
+    condition: "Danger",
+  },
+];
 
-  await db
-    .insert(schema.monitoringNodes)
-    .values({
-      id: "NODE-001",
-      name: "Demo Node",
-      latitude: 37.7749,
-      longitude: -122.4194,
-      deviceTokenHash: nodeHash,
-      registeredAt: now,
-      lastSeenAt: now,
-      overallCondition: "Normal",
-      updatedAt: now,
-    })
-    .onConflictDoNothing();
+const RADON_MAX = 100;
+const RADON_DANGER = 350;
+const GYRO_MAX = 1;
 
-  const logs = [];
-  let sequence = 1;
-  const baseTime = now - 24 * 3600; // 24 hours ago
-
-  for (let i = 0; i < 24; i++) {
-    logs.push({
-      monitoringNodeId: "NODE-001",
-      sequence: sequence++,
-      deviceTimestamp: baseTime + i * 3600,
-      receivedAt: baseTime + i * 3600 + 1,
-
-      radonValue: 40 + Math.random() * 10,
-      radonCondition: "Normal" as const,
-      radonMinThreshold: 0,
-      radonMaxThreshold: 100,
-
-      soilMoistureValue: 30 + Math.random() * 5,
-      soilMoistureCondition: "Normal" as const,
-      soilMoistureMinThreshold: 20,
-      soilMoistureMaxThreshold: 80,
-
-      gyroValue: 0.1 + Math.random() * 0.2,
-      gyroCondition: "Normal" as const,
-      gyroMinThreshold: -1,
-      gyroMaxThreshold: 1,
-
-      rainfallValue: Math.random() * 2,
-      rainfallCondition: "Normal" as const,
-      rainfallMinThreshold: 0,
-      rainfallMaxThreshold: 10,
-
-      overallCondition: "Normal" as const,
-      isLandslide: 0,
-    });
+/** Readings sized to land in the given band, matching the dashboard legend. */
+function reading(condition: Condition) {
+  switch (condition) {
+    case "Danger":
+      return {
+        radon: RADON_DANGER + 10 + Math.random() * 40,
+        moisture: 78 + Math.random() * 8,
+        gyro: GYRO_MAX + 0.2 + Math.random() * 0.5,
+        rainfall: 11 + Math.random() * 4,
+      };
+    case "Warning":
+      return {
+        radon: RADON_MAX + 10 + Math.random() * 30,
+        moisture: 62 + Math.random() * 8,
+        gyro: 0.4 + Math.random() * 0.3,
+        rainfall: 4 + Math.random() * 3,
+      };
+    default:
+      return {
+        radon: 40 + Math.random() * 10,
+        moisture: 30 + Math.random() * 5,
+        gyro: 0.1 + Math.random() * 0.2,
+        rainfall: Math.random() * 2,
+      };
   }
+}
 
-  await db.insert(schema.telemetryLogs).values(logs).onConflictDoNothing();
+// biome-ignore lint/suspicious/noExplicitAny: db is D1 in the Worker or bun:sqlite locally
+export async function seedDatabase(db: any) {
+  const now = Math.floor(Date.now() / 1000);
+  const baseTime = now - 24 * 3600; // 24 hours of history
+
+  for (const node of SEED_NODES) {
+    await db
+      .insert(schema.monitoringNodes)
+      .values({
+        id: node.id,
+        name: node.name,
+        latitude: node.latitude,
+        longitude: node.longitude,
+        deviceTokenHash: await sha256(`${node.id}-token`),
+        registeredAt: now,
+        lastSeenAt: now,
+        overallCondition: node.condition,
+        updatedAt: now,
+      })
+      .onConflictDoNothing();
+
+    const logs = [];
+    for (let i = 0; i < 24; i++) {
+      // Sites sit stable for most of the window and escalate near the end, so
+      // the telemetry chart shows a trend rather than a flat line.
+      const escalated = i >= 18;
+      const condition: Condition = escalated ? node.condition : "Normal";
+      const value = reading(condition);
+      const isFinalDanger = condition === "Danger" && i === 23;
+
+      logs.push({
+        monitoringNodeId: node.id,
+        sequence: i + 1,
+        deviceTimestamp: baseTime + i * 3600,
+        receivedAt: baseTime + i * 3600 + 1,
+
+        radonValue: value.radon,
+        radonCondition: condition,
+        radonMinThreshold: 0,
+        radonMaxThreshold: RADON_MAX,
+
+        soilMoistureValue: value.moisture,
+        soilMoistureCondition: condition,
+        soilMoistureMinThreshold: 20,
+        soilMoistureMaxThreshold: 80,
+
+        gyroValue: value.gyro,
+        gyroCondition: condition,
+        gyroMinThreshold: -1,
+        gyroMaxThreshold: GYRO_MAX,
+
+        rainfallValue: value.rainfall,
+        rainfallCondition: condition,
+        rainfallMinThreshold: 0,
+        rainfallMaxThreshold: 10,
+
+        overallCondition: condition,
+        isLandslide: isFinalDanger ? 1 : 0,
+      });
+    }
+
+    await db.insert(schema.telemetryLogs).values(logs).onConflictDoNothing();
+  }
 }
 
 // Local CLI execution helper

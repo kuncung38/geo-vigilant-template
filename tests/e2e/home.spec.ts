@@ -29,7 +29,7 @@ test("GEO-VIGILANT Full SPA E2E Workflow: Dashboard -> Topography Map -> Sensor 
   // Verify zone marker names appear (using .first() to prevent strict mode violation)
   await expect(page.getByText("Cianjur Sektor 4").first()).toBeVisible();
 
-  // 3. Navigate client-side to Node Detail (/nodes/NODE-001) via Navbar
+  // 3. Navigate client-side to Node Detail (/nodes/:id) via Navbar
   await page.getByRole("link", { name: "Sensor Clusters" }).first().click();
   await expect(page).toHaveURL(/.*\/nodes/);
 

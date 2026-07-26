@@ -44,19 +44,19 @@ describe("GET /api/nodes", () => {
     const res = await app.request("/api/nodes", {}, { DB: db });
     expect(res.status).toBe(200);
     const json = (await res.json()) as Array<{ id: string; name: string }>;
-    expect(json.length).toBe(1);
-    expect(json[0].id).toBe("NODE-001");
-    expect(json[0].name).toBe("Demo Node");
+    expect(json.length).toBe(3);
+    expect(json.map((n) => n.id)).toContain("NODE-C4-A1");
+    expect(json.map((n) => n.name)).toContain("Cianjur Sektor 4");
   });
 
   it("returns 200 and node detail for GET /api/nodes/:id", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     await seedDatabase(drizzleDb as any);
 
-    const res = await app.request("/api/nodes/NODE-001", {}, { DB: db });
+    const res = await app.request("/api/nodes/NODE-C4-A1", {}, { DB: db });
     expect(res.status).toBe(200);
     const json = (await res.json()) as { id: string; name: string };
-    expect(json.id).toBe("NODE-001");
+    expect(json.id).toBe("NODE-C4-A1");
   });
 
   it("returns 404 for GET /api/nodes/:id when node does not exist", async () => {

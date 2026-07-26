@@ -8,7 +8,7 @@ import { useTelemetry } from "../../src/client/hooks/useTelemetry";
 const mockTelemetry = [
   {
     id: 1,
-    monitoringNodeId: "NODE-001",
+    monitoringNodeId: "NODE-C4-A1",
     sequence: 1,
     deviceTimestamp: 1716561000000,
     receivedAt: 1716561001000,
@@ -43,7 +43,7 @@ describe("useTelemetry Hook", () => {
       },
     });
     global.fetch = vi.fn().mockImplementation(async (url: string) => {
-      if (url.includes("/api/telemetry?nodeId=NODE-001")) {
+      if (url.includes("/api/telemetry?nodeId=NODE-C4-A1")) {
         return {
           ok: true,
           json: async () => mockTelemetry,
@@ -62,13 +62,15 @@ describe("useTelemetry Hook", () => {
   );
 
   it("fetches and returns telemetry logs for a given nodeId", async () => {
-    const { result } = renderHook(() => useTelemetry("NODE-001"), { wrapper });
+    const { result } = renderHook(() => useTelemetry("NODE-C4-A1"), {
+      wrapper,
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data).toEqual(mockTelemetry);
     expect(global.fetch).toHaveBeenCalledWith(
-      "/api/telemetry?nodeId=NODE-001&limit=50",
+      "/api/telemetry?nodeId=NODE-C4-A1&limit=50",
       undefined,
     );
   });

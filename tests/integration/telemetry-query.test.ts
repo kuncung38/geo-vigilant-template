@@ -39,7 +39,7 @@ describe("GET /api/telemetry", () => {
 
   it("returns 200 and ordered telemetry logs for a nodeId", async () => {
     const res = await app.request(
-      "/api/telemetry?nodeId=NODE-001",
+      "/api/telemetry?nodeId=NODE-C4-A1",
       {},
       { DB: db },
     );
@@ -55,7 +55,7 @@ describe("GET /api/telemetry", () => {
 
   it("respects limit query param (default 50, max 100)", async () => {
     const res = await app.request(
-      "/api/telemetry?nodeId=NODE-001&limit=5",
+      "/api/telemetry?nodeId=NODE-C4-A1&limit=5",
       {},
       { DB: db },
     );
