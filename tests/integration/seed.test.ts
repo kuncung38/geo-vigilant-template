@@ -4,7 +4,7 @@ import path from "node:path";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../src/db/schema";
-import { seedDatabase } from "../../src/db/seed";
+import { buildSeedSql, seedDatabase } from "../../src/db/seed";
 
 describe("Database Seed Script", () => {
   let db: Database;
@@ -63,5 +63,35 @@ describe("Database Seed Script", () => {
       expect(node.longitude).toBeGreaterThan(105);
       expect(node.longitude).toBeLessThan(110);
     }
+  });
+
+  it("generates SQL that produces the same data as the drizzle seed", async () => {
+    // db:seed:local applies this SQL through wrangler so the target database
+    // comes from wrangler's config rather than guessing a local .sqlite file.
+    const sql = await buildSeedSql();
+    for (const statement of sql.split("\n")) {
+      if (statement.trim()) db.exec(statement);
+    }
+
+    const nodes = await drizzleDb.select().from(schema.monitoringNodes);
+    const logs = await drizzleDb.select().from(schema.telemetryLogs);
+    expect(nodes).toHaveLength(3);
+    expect(logs).toHaveLength(72);
+    expect(nodes.map((n) => n.id).sort()).toEqual([
+      "NODE-C4-A1",
+      "NODE-G2-D1",
+      "NODE-S1-B2",
+    ]);
+  });
+
+  it("re-running the SQL seed is idempotent", async () => {
+    const sql = await buildSeedSql();
+    for (let pass = 0; pass < 2; pass++) {
+      for (const statement of sql.split("\n")) {
+        if (statement.trim()) db.exec(statement);
+      }
+    }
+    const nodes = await drizzleDb.select().from(schema.monitoringNodes);
+    expect(nodes).toHaveLength(3);
   });
 });

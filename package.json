@@ -16,9 +16,11 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply geo-vigilant-db --local",
-    "db:seed:local": "bun src/db/seed.ts",
+    "db:seed:local": "bun scripts/seed-db.ts",
     "db:token": "bun scripts/mint-device-token.ts",
-    "device:simulate": "bun scripts/simulate-device.ts"
+    "device:simulate": "bun scripts/simulate-device.ts",
+    "db:seed:remote": "bun scripts/seed-db.ts --remote",
+    "db:migrate:remote": "wrangler d1 migrations apply geo-vigilant-db --remote"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",

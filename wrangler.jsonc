@@ -1,7 +1,10 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  // Rename this to claim your own workers.dev subdomain.
   "name": "geo-vigilant",
-  "account_id": "918a8da3c41883f3c214baebe7a820be",
+  // account_id is intentionally not committed. Wrangler reads it from the
+  // CLOUDFLARE_ACCOUNT_ID environment variable, or prompts you to pick an
+  // account when you are logged in via `wrangler login`.
   "main": "src/server/index.ts",
   "compatibility_date": "2024-12-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -19,7 +22,10 @@
     {
       "binding": "DB",
       "database_name": "geo-vigilant-db",
-      "database_id": "a7d2d2fb-2111-42fe-9050-ebe0c5992164",
+      // Replace with the id printed by `wrangler d1 create geo-vigilant-db`.
+      // Local development (`bun run dev`) uses a local SQLite file and ignores
+      // this value, so you only need it to deploy. See README "Deploy".
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
       "migrations_dir": "drizzle"
     }
   ]

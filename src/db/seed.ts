@@ -80,28 +80,28 @@ function reading(condition: Condition) {
   }
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: db is D1 in the Worker or bun:sqlite locally
-export async function seedDatabase(db: any) {
-  const now = Math.floor(Date.now() / 1000);
+/**
+ * Build the rows once so drizzle (tests, in-process seeding) and the SQL
+ * generator used by the CLI cannot drift apart.
+ */
+export async function buildSeedRows(now = Math.floor(Date.now() / 1000)) {
   const baseTime = now - 24 * 3600; // 24 hours of history
+  const nodes = [];
+  const logs = [];
 
   for (const node of SEED_NODES) {
-    await db
-      .insert(schema.monitoringNodes)
-      .values({
-        id: node.id,
-        name: node.name,
-        latitude: node.latitude,
-        longitude: node.longitude,
-        deviceTokenHash: await sha256(`${node.id}-token`),
-        registeredAt: now,
-        lastSeenAt: now,
-        overallCondition: node.condition,
-        updatedAt: now,
-      })
-      .onConflictDoNothing();
+    nodes.push({
+      id: node.id,
+      name: node.name,
+      latitude: node.latitude,
+      longitude: node.longitude,
+      deviceTokenHash: await sha256(`${node.id}-token`),
+      registeredAt: now,
+      lastSeenAt: now,
+      overallCondition: node.condition,
+      updatedAt: now,
+    });
 
-    const logs = [];
     for (let i = 0; i < 24; i++) {
       // Sites sit stable for most of the window and escalate near the end, so
       // the telemetry chart shows a trend rather than a flat line.
@@ -140,67 +140,52 @@ export async function seedDatabase(db: any) {
         isLandslide: isFinalDanger ? 1 : 0,
       });
     }
-
-    await db.insert(schema.telemetryLogs).values(logs).onConflictDoNothing();
-  }
-}
-
-// Local CLI execution helper.
-// The previous check compared process.argv[1] against the module URL's raw
-// pathname. That never matched on Windows ("E:\...\seed.ts" vs "/E:/.../seed.ts")
-// and also breaks on any path containing a space, since pathname is
-// percent-encoded. fileURLToPath handles both, so use it and compare resolved
-// paths — otherwise `bun run db:seed:local` silently seeds nothing.
-function isRunDirectly(): boolean {
-  const entry = process.argv[1];
-  if (!entry) return false;
-  const { fileURLToPath } = require("node:url");
-  const { resolve } = require("node:path");
-  const normalize = (p: string) => resolve(p).replace(/\\/g, "/").toLowerCase();
-  return normalize(fileURLToPath(import.meta.url)) === normalize(entry);
-}
-
-if (isRunDirectly()) {
-  // Try to find the local wrangler database
-  let sqliteDbPath =
-    ".wrangler/state/v3/d1/miniflare-D1DatabaseObject/xxxx-xxxx-xxxx-xxxx.sqlite";
-
-  try {
-    const fs = await import("node:fs");
-    const path = await import("node:path");
-    const dir = ".wrangler/state/v3/d1/miniflare-D1DatabaseObject";
-    if (fs.existsSync(dir)) {
-      const files = fs.readdirSync(dir);
-      const sqliteFile = files.find((f) => f.endsWith(".sqlite"));
-      if (sqliteFile) {
-        sqliteDbPath = path.join(dir, sqliteFile);
-      }
-    }
-  } catch (e) {
-    // Ignore
   }
 
-  try {
-    const sqliteMod = "bun:" + "sqlite";
-    const drizzleMod = "drizzle-orm/" + "bun-sqlite";
-    const { Database } = require(sqliteMod);
-    const { drizzle } = require(drizzleMod);
-    const sqliteDb = new Database(sqliteDbPath);
-    const localDb = drizzle(sqliteDb, { schema });
-    seedDatabase(localDb)
-      .then(() => {
-        console.log("Database seeded successfully!");
-        process.exit(0);
-      })
-      .catch((err) => {
-        console.error("Failed to seed database:", err);
-        process.exit(1);
-      });
-  } catch (e) {
-    console.error(
-      "Could not open local DB. Run `bun run db:migrate:local` first. Error:",
-      (e as Error).message,
+  return { nodes, logs };
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: db is D1 in the Worker or bun:sqlite locally
+export async function seedDatabase(db: any) {
+  const { nodes, logs } = await buildSeedRows();
+  await db.insert(schema.monitoringNodes).values(nodes).onConflictDoNothing();
+  await db.insert(schema.telemetryLogs).values(logs).onConflictDoNothing();
+}
+
+function sqlValue(value: string | number): string {
+  return typeof value === "number"
+    ? String(value)
+    : `'${value.replace(/'/g, "''")}'`;
+}
+
+/**
+ * The same seed data as INSERT statements, so it can be applied through
+ * `wrangler d1 execute`. That resolves the target database from wrangler's own
+ * config instead of guessing which local .sqlite file to open — the previous CLI
+ * picked the first file in the miniflare directory, so after any database_id
+ * change it silently seeded the wrong database and still reported success.
+ */
+export async function buildSeedSql(): Promise<string> {
+  const { nodes, logs } = await buildSeedRows();
+  const statements: string[] = [];
+
+  for (const n of nodes) {
+    const cols = Object.keys(n);
+    const vals = Object.values(n).map((v) => sqlValue(v as string | number));
+    statements.push(
+      `INSERT OR IGNORE INTO monitoring_nodes (${cols.map(toSnake).join(",")}) VALUES (${vals.join(",")});`,
     );
-    process.exit(1);
   }
+  for (const l of logs) {
+    const cols = Object.keys(l);
+    const vals = Object.values(l).map((v) => sqlValue(v as string | number));
+    statements.push(
+      `INSERT OR IGNORE INTO telemetry_logs (${cols.map(toSnake).join(",")}) VALUES (${vals.join(",")});`,
+    );
+  }
+  return statements.join("\n");
+}
+
+function toSnake(key: string): string {
+  return key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 }
