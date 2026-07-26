@@ -24,7 +24,16 @@ test.describe("3D terrain map", () => {
     await expect(canvas).toBeVisible();
 
     // Sensor clusters are real georeferenced markers, not absolutely-positioned divs.
-    await expect(page.locator(".gv-marker")).toHaveCount(3);
+    // The count tracks whatever the API returns (seeded D1 and the offline fallback
+    // differ), so compare against the registry rather than hardcoding a number.
+    const registry = page.getByRole("heading", {
+      name: /Active Cluster Registry/i,
+    });
+    const expectedCount = Number(
+      (await registry.innerText()).match(/\((\d+) Nodes?\)/)?.[1],
+    );
+    expect(expectedCount).toBeGreaterThan(0);
+    await expect(page.locator(".gv-marker")).toHaveCount(expectedCount);
     await expect(page.getByText("Cianjur Sektor 4").first()).toBeVisible();
 
     // Elevation data must actually stream in — this is what makes the map 3D.

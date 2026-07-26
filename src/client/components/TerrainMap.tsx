@@ -301,14 +301,20 @@ export function TerrainMap({
     }
   }, [selectedNodeId]);
 
-  // Frame every node once data arrives.
+  // Frame the monitored region once data arrives.
   const fittedRef = useRef(false);
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isReady || fittedRef.current || nodes.length === 0) return;
 
+    // Frame the main cluster, not every outlier. A single stray node (a demo or
+    // mis-seeded record on the far side of the world) would otherwise force a
+    // useless whole-globe view. Outliers stay plotted; they just don't drive
+    // the camera.
+    const framed = nodesNearMedian(nodes);
+
     const bounds = new maplibregl.LngLatBounds();
-    for (const node of nodes) bounds.extend([node.longitude, node.latitude]);
+    for (const node of framed) bounds.extend([node.longitude, node.latitude]);
     map.fitBounds(bounds, {
       padding: { top: 140, bottom: 140, left: 120, right: 120 },
       maxZoom: 11,
@@ -405,6 +411,31 @@ export function TerrainMap({
       </div>
     </>
   );
+}
+
+/**
+ * Nodes within `maxDegrees` of the median position — the geographic bulk of the
+ * network. The median (rather than the mean) keeps a distant outlier from
+ * dragging the reference point toward itself. Falls back to the full set when
+ * the nodes are genuinely spread out.
+ */
+export function nodesNearMedian(nodes: MapNode[], maxDegrees = 5): MapNode[] {
+  if (nodes.length < 3) return nodes;
+
+  const median = (values: number[]) => {
+    const sorted = [...values].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length / 2)];
+  };
+  const medianLat = median(nodes.map((n) => n.latitude));
+  const medianLon = median(nodes.map((n) => n.longitude));
+
+  const near = nodes.filter(
+    (n) =>
+      Math.abs(n.latitude - medianLat) <= maxDegrees &&
+      Math.abs(n.longitude - medianLon) <= maxDegrees,
+  );
+
+  return near.length > 0 ? near : nodes;
 }
 
 function escapeHtml(value: string): string {
