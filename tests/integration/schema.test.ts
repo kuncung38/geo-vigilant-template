@@ -13,7 +13,7 @@ describe("Database Schema Integration", () => {
     if (fs.existsSync(migrationPath)) {
       const sql = fs.readFileSync(migrationPath, "utf-8");
       for (const stmt of sql.split("--> statement-breakpoint")) {
-        if (stmt.trim()) db.exec(stmt);
+        if (stmt.trim()) db.exec(stmt.trim());
       }
     }
   });
@@ -39,7 +39,7 @@ describe("Database Schema Integration", () => {
     expect(query.get()).toBeTruthy();
 
     expect(() => {
-      db.exec(`
+      db.prepare(`
         INSERT INTO telemetry_logs (
           monitoring_node_id, sequence, device_timestamp, received_at,
           radon_value, radon_condition, radon_min_threshold, radon_max_threshold,
@@ -55,19 +55,19 @@ describe("Database Schema Integration", () => {
           10, 'Normal', 0, 100,
           'Normal', 0
         );
-      `);
+      `).run();
     }).toThrow(/FOREIGN KEY|constraint/i);
   });
 
   it("enforces UNIQUE (monitoring_node_id, sequence) on telemetry_logs", () => {
-    db.exec(`
+    db.prepare(`
       INSERT INTO monitoring_nodes (
         id, name, latitude, longitude, device_token_hash, registered_at, updated_at
       ) VALUES ('NODE-001', 'Test Node', 0.0, 0.0, 'hash', 1000, 1000);
-    `);
+    `).run();
 
     const insertLog = () => {
-      db.exec(`
+      db.prepare(`
         INSERT INTO telemetry_logs (
           monitoring_node_id, sequence, device_timestamp, received_at,
           radon_value, radon_condition, radon_min_threshold, radon_max_threshold,
@@ -83,7 +83,7 @@ describe("Database Schema Integration", () => {
           10, 'Normal', 0, 100,
           'Normal', 0
         );
-      `);
+      `).run();
     };
 
     insertLog();
@@ -91,14 +91,14 @@ describe("Database Schema Integration", () => {
   });
 
   it("enforces CHECK (condition IN ('Normal', 'Warning', 'Danger'))", () => {
-    db.exec(`
+    db.prepare(`
       INSERT INTO monitoring_nodes (
         id, name, latitude, longitude, device_token_hash, registered_at, updated_at
       ) VALUES ('NODE-001', 'Test Node', 0.0, 0.0, 'hash', 1000, 1000);
-    `);
+    `).run();
 
     expect(() => {
-      db.exec(`
+      db.prepare(`
         INSERT INTO telemetry_logs (
           monitoring_node_id, sequence, device_timestamp, received_at,
           radon_value, radon_condition, radon_min_threshold, radon_max_threshold,
@@ -114,19 +114,19 @@ describe("Database Schema Integration", () => {
           10, 'Normal', 0, 100,
           'Normal', 0
         );
-      `);
+      `).run();
     }).toThrow(/CHECK|constraint/i);
   });
 
   it("enforces CHECK (min_threshold < max_threshold)", () => {
-    db.exec(`
+    db.prepare(`
       INSERT INTO monitoring_nodes (
         id, name, latitude, longitude, device_token_hash, registered_at, updated_at
       ) VALUES ('NODE-001', 'Test Node', 0.0, 0.0, 'hash', 1000, 1000);
-    `);
+    `).run();
 
     expect(() => {
-      db.exec(`
+      db.prepare(`
         INSERT INTO telemetry_logs (
           monitoring_node_id, sequence, device_timestamp, received_at,
           radon_value, radon_condition, radon_min_threshold, radon_max_threshold,
@@ -142,7 +142,7 @@ describe("Database Schema Integration", () => {
           10, 'Normal', 0, 100,
           'Normal', 0
         );
-      `);
+      `).run();
     }).toThrow(/CHECK|constraint/i);
   });
 

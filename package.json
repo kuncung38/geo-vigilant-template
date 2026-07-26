@@ -16,7 +16,7 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply geo-vigilant-db --local",
-    "db:seed:local": "tsx src/db/seed.ts"
+    "db:seed:local": "bun run src/db/seed.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
@@ -45,6 +45,7 @@
     "@types/react-dom": "^18.3.2",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "bun-types": "^1.3.14",
     "drizzle-kit": "^0.30.1",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.49",
