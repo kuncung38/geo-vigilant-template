@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { getDb } from "../../db/client";
@@ -31,9 +31,28 @@ const telemetrySchema = z.object({
   isLandslide: z.number().int().min(0).max(1).optional().default(0),
 });
 
-telemetryRoute.use("/", authMiddleware);
+telemetryRoute.get("/", async (c) => {
+  const nodeId = c.req.query("nodeId");
+  if (!nodeId) {
+    return c.json({ error: "Missing nodeId query param" }, 400);
+  }
 
-telemetryRoute.post("/", async (c) => {
+  let limit = Number.parseInt(c.req.query("limit") || "50", 10);
+  if (Number.isNaN(limit) || limit <= 0) limit = 50;
+  if (limit > 100) limit = 100;
+
+  const db = getDb(c.env.DB);
+  const logs = await db
+    .select()
+    .from(telemetryLogs)
+    .where(eq(telemetryLogs.monitoringNodeId, nodeId))
+    .orderBy(desc(telemetryLogs.receivedAt))
+    .limit(limit);
+
+  return c.json(logs, 200);
+});
+
+telemetryRoute.post("/", authMiddleware, async (c) => {
   let json: unknown;
   try {
     json = await c.req.json();
