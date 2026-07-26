@@ -30,7 +30,7 @@ describe("Database Seed Script", () => {
   });
 
   it("seeds the 3 West Java nodes with 24 telemetry logs each", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: seedDatabase takes a D1 or bun:sqlite drizzle client, whose types are not interchangeable
     await seedDatabase(drizzleDb as any);
 
     const nodes = await drizzleDb.select().from(schema.monitoringNodes);
@@ -51,7 +51,7 @@ describe("Database Seed Script", () => {
   });
 
   it("seeds every node inside the monitored region, never off-continent", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: seedDatabase takes a D1 or bun:sqlite drizzle client, whose types are not interchangeable
     await seedDatabase(drizzleDb as any);
 
     const nodes = await drizzleDb.select().from(schema.monitoringNodes);

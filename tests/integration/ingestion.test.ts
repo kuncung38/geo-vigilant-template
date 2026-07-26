@@ -29,7 +29,7 @@ describe("device telemetry ingestion", () => {
       }
     }
     drizzleDb = drizzle(db, { schema });
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: seedDatabase takes a D1 or bun:sqlite drizzle client, whose types are not interchangeable
     await seedDatabase(drizzleDb as any);
   });
 

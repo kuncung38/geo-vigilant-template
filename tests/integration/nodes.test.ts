@@ -38,7 +38,7 @@ describe("GET /api/nodes", () => {
   });
 
   it("returns 200 and list of nodes when nodes exist", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: seedDatabase takes a D1 or bun:sqlite drizzle client, whose types are not interchangeable
     await seedDatabase(drizzleDb as any);
 
     const res = await app.request("/api/nodes", {}, { DB: db });
@@ -50,7 +50,7 @@ describe("GET /api/nodes", () => {
   });
 
   it("returns 200 and node detail for GET /api/nodes/:id", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: seedDatabase takes a D1 or bun:sqlite drizzle client, whose types are not interchangeable
     await seedDatabase(drizzleDb as any);
 
     const res = await app.request("/api/nodes/NODE-C4-A1", {}, { DB: db });
