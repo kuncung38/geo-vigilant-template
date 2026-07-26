@@ -1,13 +1,13 @@
+import { sql } from "drizzle-orm";
 import {
+  check,
+  index,
+  integer,
+  real,
   sqliteTable,
   text,
-  real,
-  integer,
-  index,
   unique,
-  check,
 } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
 
 export const monitoringNodes = sqliteTable(
   "monitoring_nodes",

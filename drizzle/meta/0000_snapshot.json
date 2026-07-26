@@ -75,16 +75,12 @@
       "indexes": {
         "monitoring_nodes_overall_condition_idx": {
           "name": "monitoring_nodes_overall_condition_idx",
-          "columns": [
-            "overall_condition"
-          ],
+          "columns": ["overall_condition"],
           "isUnique": false
         },
         "monitoring_nodes_last_seen_at_idx": {
           "name": "monitoring_nodes_last_seen_at_idx",
-          "columns": [
-            "last_seen_at"
-          ],
+          "columns": ["last_seen_at"],
           "isUnique": false
         }
       },
@@ -267,18 +263,12 @@
       "indexes": {
         "telemetry_logs_monitoring_node_id_received_at_idx": {
           "name": "telemetry_logs_monitoring_node_id_received_at_idx",
-          "columns": [
-            "monitoring_node_id",
-            "received_at"
-          ],
+          "columns": ["monitoring_node_id", "received_at"],
           "isUnique": false
         },
         "telemetry_logs_monitoring_node_id_sequence_unique": {
           "name": "telemetry_logs_monitoring_node_id_sequence_unique",
-          "columns": [
-            "monitoring_node_id",
-            "sequence"
-          ],
+          "columns": ["monitoring_node_id", "sequence"],
           "isUnique": true
         }
       },
@@ -287,12 +277,8 @@
           "name": "telemetry_logs_monitoring_node_id_monitoring_nodes_id_fk",
           "tableFrom": "telemetry_logs",
           "tableTo": "monitoring_nodes",
-          "columnsFrom": [
-            "monitoring_node_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["monitoring_node_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
