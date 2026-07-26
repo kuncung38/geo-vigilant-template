@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
+import { MapOverview } from "./pages/MapOverview";
 import { NodeDetail } from "./pages/NodeDetail";
 import { Overview } from "./pages/Overview";
 
@@ -21,6 +22,7 @@ export function AppContent() {
         <main className="flex-1 md:ml-64 overflow-y-auto p-gutter md:p-margin-desktop bg-background">
           <Routes>
             <Route path="/" element={<Overview />} />
+            <Route path="/map" element={<MapOverview />} />
             <Route path="/nodes/:id" element={<NodeDetail />} />
           </Routes>
         </main>

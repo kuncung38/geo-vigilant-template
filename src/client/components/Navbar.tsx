@@ -5,6 +5,7 @@ export function Navbar() {
 
   const navItems = [
     { name: "Overview", label: "Dashboard", path: "/", icon: "dashboard" },
+    { name: "Map View", label: "Topography", path: "/map", icon: "map" },
     { name: "Node Detail", label: "Sensor Clusters", path: "/nodes/NODE-001", icon: "hub" },
   ];
 
@@ -68,7 +69,7 @@ export function Navbar() {
           {navItems.map((item) => {
             const isActive =
               location.pathname === item.path ||
-              (item.path !== "/" && location.pathname.startsWith("/nodes"));
+              (item.path !== "/" && item.path !== "/map" && location.pathname.startsWith("/nodes"));
             return (
               <Link
                 key={item.name}
@@ -96,7 +97,7 @@ export function Navbar() {
         {navItems.map((item) => {
           const isActive =
             location.pathname === item.path ||
-            (item.path !== "/" && location.pathname.startsWith("/nodes"));
+            (item.path !== "/" && item.path !== "/map" && location.pathname.startsWith("/nodes"));
           return (
             <Link
               key={item.name}
