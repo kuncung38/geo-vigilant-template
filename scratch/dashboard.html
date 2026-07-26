@@ -1,0 +1,418 @@
+<!DOCTYPE html><html class="light" lang="id" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>GEO-VIGILANT | Landslide Monitoring</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#ffdbca",
+                    "primary-fixed-dim": "#bec6e0",
+                    "background": "#f8f9ff",
+                    "surface": "#f8f9ff",
+                    "on-secondary-fixed": "#341100",
+                    "on-error-container": "#93000a",
+                    "on-primary-container": "#7c839b",
+                    "inverse-surface": "#213145",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-bright": "#f8f9ff",
+                    "error": "#ba1a1a",
+                    "surface-container-low": "#eff4ff",
+                    "tertiary": "#000000",
+                    "surface-container-high": "#dce9ff",
+                    "on-tertiary": "#ffffff",
+                    "surface-tint": "#565e74",
+                    "on-background": "#0b1c30",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "on-surface": "#0b1c30",
+                    "primary-container": "#131b2e",
+                    "surface-container": "#e5eeff",
+                    "primary": "#000000",
+                    "outline-variant": "#c6c6cd",
+                    "secondary-fixed-dim": "#ffb690",
+                    "error-container": "#ffdad6",
+                    "on-secondary-container": "#5c2400",
+                    "secondary": "#9d4300",
+                    "inverse-primary": "#bec6e0",
+                    "tertiary-fixed-dim": "#ffb4ab",
+                    "on-error": "#ffffff",
+                    "primary-fixed": "#dae2fd",
+                    "surface-variant": "#d3e4fe",
+                    "on-secondary": "#ffffff",
+                    "on-surface-variant": "#45464d",
+                    "on-tertiary-container": "#f63a35",
+                    "on-secondary-fixed-variant": "#783200",
+                    "surface-container-highest": "#d3e4fe",
+                    "tertiary-container": "#410002",
+                    "on-tertiary-fixed": "#410002",
+                    "outline": "#76777d",
+                    "surface-dim": "#cbdbf5",
+                    "on-tertiary-fixed-variant": "#93000b",
+                    "inverse-on-surface": "#eaf1ff",
+                    "secondary-container": "#fd761a",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed": "#131b2e",
+                    "tertiary-fixed": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "container-max": "1440px",
+                    "gutter": "16px",
+                    "margin-mobile": "16px",
+                    "margin-desktop": "32px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "label-caps": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-md": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { background-color: #f8f9ff; color: #0b1c30; -webkit-font-smoothing: antialiased; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; }
+        .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+        .metric-card { border: 1px solid #E2E8F0; transition: border-color 0.2s; }
+        .metric-card:hover { border-color: #000000; }
+        .status-safe { border-left: 4px solid #10b981; }
+        .status-warning { border-left: 4px solid #f59e0b; }
+        .status-danger { border-left: 4px solid #ef4444; }
+        .zebra-table tr:nth-child(even) { background-color: #F8FAFC; }
+        .sticky-header { position: sticky; top: 0; background: #F1F5F9; z-index: 10; }
+    </style>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- TopNavBar -->
+<header class="bg-surface border-b border-outline-variant h-16 fixed top-0 w-full z-50">
+<div class="flex justify-between items-center w-full px-gutter max-w-container-max mx-auto h-full">
+<div class="flex items-center gap-4">
+<span class="font-display-lg text-display-lg text-primary tracking-tight">GEO-VIGILANT</span>
+<div class="h-8 w-[1px] bg-outline-variant ml-4 hidden md:block"></div>
+<div class="hidden md:flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+<select class="bg-transparent border-none focus:ring-0 font-body-md text-on-surface pr-8 py-0">
+<option>Cianjur - Sektor 4</option>
+<option>Cianjur - Sektor 1</option>
+<option>Sumedang - Zona B</option>
+</select>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center bg-surface-container-low border border-outline-variant rounded-lg px-3 py-1.5 w-64">
+<input class="bg-transparent border-none focus:ring-0 w-full font-body-md" placeholder="Cari sensor..." type="text">
+<span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+</div>
+
+
+
+</div>
+</div>
+</header>
+<div class="flex pt-16 h-screen">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-full sticky top-16 p-4 gap-2 w-64 bg-surface-container-low border-r border-outline-variant shrink-0">
+<div class="px-2 py-4 mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="hub">hub</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-primary">Global Status</h2>
+<p class="text-[10px] uppercase font-bold text-on-surface-variant opacity-70">Vigilant - Sistem Normal</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-bold transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span class="font-label-caps text-label-caps uppercase">Sensor Clusters</span>
+</a>
+
+
+</nav>
+
+</aside>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto p-gutter md:p-margin-desktop bg-background">
+<!-- Overall Risk Banner -->
+<div class="mb-8 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-surface-container-lowest p-6 rounded-xl border border-outline-variant">
+<div>
+<h1 class="font-headline-md text-headline-md text-on-surface mb-1">Status Keamanan: Cianjur Sektor 4</h1>
+<p class="font-body-md text-on-surface-variant">Update terakhir: 7 Juli 2026, 00.05.15 WIB</p>
+</div>
+<div class="flex items-center gap-4 bg-emerald-50 border border-emerald-200 px-6 py-4 rounded-full">
+<span class="w-4 h-4 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="font-headline-sm text-emerald-700">STATUS: AMAN</span>
+<span class="material-symbols-outlined text-emerald-700" data-icon="verified_user">verified_user</span>
+</div>
+</div>
+<!-- Real-Time Sensor Grid -->
+<section class="mb-12">
+<div class="flex items-center justify-between mb-6">
+<h2 class="font-label-caps text-label-caps text-on-surface-variant">SENSOR REAL-TIME</h2>
+<button class="text-primary font-bold text-[12px] hover:underline">LIHAT SEMUA NODE</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Radon Gauge -->
+<div class="metric-card bg-white p-6 rounded-xl shadow-sm status-safe">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant">RADON (BQ/M³)</span>
+<span class="material-symbols-outlined text-primary" data-icon="radiation">mediation</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="relative w-32 h-32 flex items-center justify-center mb-2">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-high" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-emerald-500" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="100" stroke-width="8"></circle>
+</svg>
+<span class="absolute font-data-mono text-display-lg">145</span>
+</div>
+<div class="flex justify-between w-full font-data-mono text-[10px] text-outline">
+<span class="">MIN: 120</span>
+<span class="">AMBANG: 400</span>
+</div>
+</div>
+</div>
+<!-- Soil Moisture Card -->
+<div class="metric-card bg-white p-6 rounded-xl shadow-sm status-safe">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant">KELEMBABAN TANAH (%)</span>
+<span class="material-symbols-outlined text-primary" data-icon="opacity">opacity</span>
+</div>
+<div class="mt-2">
+<span class="font-data-mono text-display-lg">42.8%</span>
+<div class="w-full h-2 bg-surface-container-high rounded-full mt-4 overflow-hidden">
+<div class="bg-blue-500 h-full w-[42.8%]"></div>
+</div>
+<div class="mt-4 h-12">
+<div class="w-full h-full opacity-30 flex items-end gap-1">
+<div class="flex-1 bg-blue-400 h-[60%]"></div>
+<div class="flex-1 bg-blue-400 h-[65%]"></div>
+<div class="flex-1 bg-blue-400 h-[58%]"></div>
+<div class="flex-1 bg-blue-400 h-[70%]"></div>
+<div class="flex-1 bg-blue-400 h-[62%]"></div>
+<div class="flex-1 bg-blue-400 h-[66%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Gyro Sensor -->
+<div class="metric-card bg-white p-6 rounded-xl shadow-sm status-safe">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PERGERAKAN (GYRO)</span>
+<span class="material-symbols-outlined text-primary" data-icon="explore">explore</span>
+</div>
+<div class="flex flex-col items-center justify-center py-4">
+<div class="relative w-24 h-24 border-2 border-dashed border-outline-variant rounded-full flex items-center justify-center">
+<div class="w-1 h-16 bg-primary rounded-full transform rotate-12 origin-bottom transition-transform duration-1000"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-2 h-2 bg-red-500 rounded-full"></div>
+</div>
+</div>
+<span class="font-data-mono text-headline-sm mt-4">0.02° / 0.1°</span>
+<p class="text-[10px] text-on-surface-variant font-bold mt-1">Guncangan Terdeteksi: <span class="text-emerald-600">SANGAT RENDAH</span></p>
+</div>
+</div>
+<!-- Rainfall Gauge -->
+<div class="metric-card bg-white p-6 rounded-xl shadow-sm status-safe">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant">CURAH HUJAN (MM/H)</span>
+<span class="material-symbols-outlined text-primary" data-icon="umbrella">umbrella</span>
+</div>
+<div class="mt-2">
+<span class="font-data-mono text-display-lg">2.4</span>
+<p class="font-body-md text-on-surface-variant">Hujan Ringan</p>
+<div class="mt-8 grid grid-cols-7 gap-1">
+<div class="h-8 bg-surface-container-high rounded-sm"></div>
+<div class="h-10 bg-surface-container-high rounded-sm"></div>
+<div class="h-14 bg-surface-container-high rounded-sm"></div>
+<div class="h-12 bg-blue-400 rounded-sm"></div>
+<div class="h-10 bg-blue-300 rounded-sm"></div>
+<div class="h-16 bg-surface-container-high rounded-sm"></div>
+<div class="h-8 bg-surface-container-high rounded-sm"></div>
+</div>
+<p class="text-[10px] text-outline text-center mt-2 font-data-mono">Tren 24 Jam</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Historical Data Table -->
+<section class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<div class="p-6 border-b border-outline-variant flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<h2 class="font-headline-sm text-headline-sm">Data Historis &amp; Log Sensor</h2>
+<p class="text-on-surface-variant font-body-md">Riwayat pembacaan sensor 24 jam terakhir</p>
+</div>
+<div class="flex items-center gap-2">
+<select class="bg-surface border-outline-variant rounded-lg text-sm font-semibold focus:ring-primary">
+<option>1 Jam Terakhir</option>
+<option selected="">24 Jam Terakhir</option>
+<option>7 Hari Terakhir</option>
+</select>
+<button class="bg-surface border border-outline-variant p-2 rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse zebra-table">
+<thead class="sticky-header font-label-caps text-label-caps text-on-surface-variant">
+<tr>
+<th class="px-6 py-4 border-b border-outline-variant cursor-pointer hover:bg-surface-container-high">
+                                    TIMESTAMP <span class="material-symbols-outlined text-[12px]" data-icon="arrow_drop_down">arrow_drop_down</span>
+</th>
+<th class="px-6 py-4 border-b border-outline-variant">LOKASI</th>
+<th class="px-6 py-4 border-b border-outline-variant">RADON</th>
+<th class="px-6 py-4 border-b border-outline-variant">KELEMBABAN</th>
+<th class="px-6 py-4 border-b border-outline-variant">GYRO</th>
+<th class="px-6 py-4 border-b border-outline-variant">HUJAN</th>
+<th class="px-6 py-4 border-b border-outline-variant text-center">STATUS</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-sm">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 border-b border-outline-variant">2024-05-24 14:30:00</td>
+<td class="px-6 py-4 border-b border-outline-variant">NODE-C4-A1</td>
+<td class="px-6 py-4 border-b border-outline-variant">145.2</td>
+<td class="px-6 py-4 border-b border-outline-variant">42.8%</td>
+<td class="px-6 py-4 border-b border-outline-variant">0.02°</td>
+<td class="px-6 py-4 border-b border-outline-variant">2.4 mm</td>
+<td class="px-6 py-4 border-b border-outline-variant text-center">
+<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">NORMAL</span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 border-b border-outline-variant">2024-05-24 14:15:00</td>
+<td class="px-6 py-4 border-b border-outline-variant">NODE-C4-A1</td>
+<td class="px-6 py-4 border-b border-outline-variant">158.4</td>
+<td class="px-6 py-4 border-b border-outline-variant text-orange-600 font-bold">78.5%</td>
+<td class="px-6 py-4 border-b border-outline-variant">0.05°</td>
+<td class="px-6 py-4 border-b border-outline-variant">12.2 mm</td>
+<td class="px-6 py-4 border-b border-outline-variant text-center">
+<span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full font-bold text-[10px]">WARNING</span>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 border-b border-outline-variant">2024-05-24 14:00:00</td>
+<td class="px-6 py-4 border-b border-outline-variant">NODE-C4-A1</td>
+<td class="px-6 py-4 border-b border-outline-variant">142.1</td>
+<td class="px-6 py-4 border-b border-outline-variant">41.2%</td>
+<td class="px-6 py-4 border-b border-outline-variant">0.01°</td>
+<td class="px-6 py-4 border-b border-outline-variant">1.8 mm</td>
+<td class="px-6 py-4 border-b border-outline-variant text-center">
+<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">NORMAL</span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 border-b border-outline-variant">2024-05-24 13:45:00</td>
+<td class="px-6 py-4 border-b border-outline-variant text-red-600 font-bold">ALERT: NODE-B2</td>
+<td class="px-6 py-4 border-b border-outline-variant">412.2</td>
+<td class="px-6 py-4 border-b border-outline-variant">92.1%</td>
+<td class="px-6 py-4 border-b border-outline-variant">1.45°</td>
+<td class="px-6 py-4 border-b border-outline-variant">45.5 mm</td>
+<td class="px-6 py-4 border-b border-outline-variant text-center">
+<span class="px-3 py-1 bg-red-100 text-red-700 rounded-full font-bold text-[10px]">DANGER</span>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 border-b border-outline-variant">2024-05-24 13:30:00</td>
+<td class="px-6 py-4 border-b border-outline-variant">NODE-C4-A1</td>
+<td class="px-6 py-4 border-b border-outline-variant">148.9</td>
+<td class="px-6 py-4 border-b border-outline-variant">42.0%</td>
+<td class="px-6 py-4 border-b border-outline-variant">0.02°</td>
+<td class="px-6 py-4 border-b border-outline-variant">2.1 mm</td>
+<td class="px-6 py-4 border-b border-outline-variant text-center">
+<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">NORMAL</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-surface-container-low border-t border-outline-variant flex justify-between items-center">
+<span class="text-[12px] font-semibold text-on-surface-variant uppercase">Menampilkan 5 dari 96 entri</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 border border-outline-variant rounded-lg text-sm bg-white hover:bg-surface-container-low">Prev</button>
+<button class="px-3 py-1 border border-outline-variant rounded-lg text-sm bg-white hover:bg-surface-container-low">Next</button>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Mobile Bottom Navigation -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant flex justify-around items-center h-16 z-50">
+<a class="flex flex-col items-center justify-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] font-bold">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span class="text-[10px] font-bold">Nodes</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+<span class="text-[10px] font-bold">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-[10px] font-bold">Profile</span>
+</a>
+</nav>
+<script>
+        // Simple interactions for interactive feel
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('mousedown', () => card.classList.add('scale-95'));
+            card.addEventListener('mouseup', () => card.classList.remove('scale-95'));
+            card.addEventListener('mouseleave', () => card.classList.remove('scale-95'));
+        });
+
+        // Simulating live data updates
+        setInterval(() => {
+            const timeEl = document.querySelector('p.font-body-md.text-on-surface-variant');
+            if (timeEl) {
+                const now = new Date();
+                timeEl.textContent = `Update terakhir: ${now.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}, ${now.toLocaleTimeString('id-ID')} WIB`;
+            }
+        }, 1000);
+    </script>
+
+
+
+
+</body></html>

@@ -1,3 +1,63 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #f8f9ff;
+    color: #0b1c30;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.metric-card {
+  border: 1px solid #e2e8f0;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.metric-card:hover {
+  border-color: #000000;
+}
+
+.status-safe {
+  border-left: 4px solid #10b981;
+}
+
+.status-warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.status-danger {
+  border-left: 4px solid #ef4444;
+}
+
+.zebra-table tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  background: #f1f5f9;
+  z-index: 10;
+}
+
+.status-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

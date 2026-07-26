@@ -15,14 +15,16 @@ const queryClient = new QueryClient({
 
 export function AppContent() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 selection:bg-cyan-500 selection:text-slate-950 font-sans">
+    <div className="min-h-screen bg-background text-on-surface font-body-md">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Routes>
-          <Route path="/" element={<Overview />} />
-          <Route path="/nodes/:id" element={<NodeDetail />} />
-        </Routes>
-      </main>
+      <div className="flex pt-16 min-h-screen pb-16 md:pb-0">
+        <main className="flex-1 md:ml-64 overflow-y-auto p-gutter md:p-margin-desktop bg-background">
+          <Routes>
+            <Route path="/" element={<Overview />} />
+            <Route path="/nodes/:id" element={<NodeDetail />} />
+          </Routes>
+        </main>
+      </div>
     </div>
   );
 }
