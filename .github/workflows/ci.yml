@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch makes the in-flight run redundant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, lint, unit + integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint and format check
+        run: bun run lint
+
+      - name: Integration tests
+        run: bun test tests/integration
+
+      - name: Unit tests
+        run: bunx vitest run tests/unit
+
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: bunx playwright install --with-deps chromium
+
+      # The e2e suite asserts against real node data, so the local D1 the dev
+      # server binds to must be migrated and seeded before Playwright starts it.
+      - name: Prepare local database
+        run: |
+          bun run db:migrate:local
+          bun run db:seed:local
+
+      - name: Run end-to-end tests
+        run: bunx playwright test
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

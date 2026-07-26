@@ -10,11 +10,13 @@ export default defineConfig({
   },
   reporter: "html",
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173",
     trace: "on-first-retry",
     launchOptions: {
-      executablePath:
-        "C:\\Users\\user\\AppData\\Local\\ms-playwright\\chromium-1208\\chrome-win64\\chrome.exe",
+      // Was pinned to one machine's Windows chromium path, which cannot resolve
+      // on CI. Let Playwright find its managed browser unless explicitly told
+      // otherwise via PLAYWRIGHT_CHROMIUM_PATH.
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined,
     },
   },
   projects: [
