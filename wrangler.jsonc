@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "geo-vigilant",
+  "account_id": "918a8da3c41883f3c214baebe7a820be",
   "main": "src/server/index.ts",
   "compatibility_date": "2024-12-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -14,7 +15,7 @@
     {
       "binding": "DB",
       "database_name": "geo-vigilant-db",
-      "database_id": "xxxx-xxxx-xxxx-xxxx",
+      "database_id": "a7d2d2fb-2111-42fe-9050-ebe0c5992164",
       "migrations_dir": "drizzle"
     }
   ]
