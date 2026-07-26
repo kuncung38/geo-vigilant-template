@@ -1,6 +1,18 @@
 import { Link, useLocation } from "react-router-dom";
 
-export function Navbar() {
+/** Used until live node data arrives; must be a node that actually exists. */
+const FALLBACK_NODE_ID = "NODE-C4-A1";
+
+interface NavbarProps {
+  /**
+   * Node the "Sensor Clusters" entry opens. Driven by live data so the link
+   * cannot point at a decommissioned node — it previously hardcoded NODE-001,
+   * which broke once that demo record was removed.
+   */
+  primaryNodeId?: string;
+}
+
+export function Navbar({ primaryNodeId }: NavbarProps) {
   const location = useLocation();
 
   const navItems = [
@@ -9,7 +21,7 @@ export function Navbar() {
     {
       name: "Node Detail",
       label: "Sensor Clusters",
-      path: "/nodes/NODE-001",
+      path: `/nodes/${primaryNodeId ?? FALLBACK_NODE_ID}`,
       icon: "hub",
     },
   ];
