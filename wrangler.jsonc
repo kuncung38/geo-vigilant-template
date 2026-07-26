@@ -13,7 +13,8 @@
     {
       "binding": "DB",
       "database_name": "geo-vigilant-db",
-      "database_id": "xxxx-xxxx-xxxx-xxxx"
+      "database_id": "xxxx-xxxx-xxxx-xxxx",
+      "migrations_dir": "drizzle"
     }
   ]
 }

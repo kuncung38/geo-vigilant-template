@@ -1,13 +1,13 @@
-import { sql } from "drizzle-orm";
 import {
-  check,
-  index,
-  integer,
-  real,
   sqliteTable,
   text,
+  real,
+  integer,
+  index,
   unique,
+  check,
 } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
 
 export const monitoringNodes = sqliteTable(
   "monitoring_nodes",
@@ -33,7 +33,7 @@ export const monitoringNodes = sqliteTable(
     ),
     conditionCheck: check(
       "monitoring_nodes_overall_condition_check",
-      sql`${table.overallCondition} IN ('Normal', 'Warning', 'Danger')`,
+      sql`overall_condition IN ('Normal', 'Warning', 'Danger')`,
     ),
   }),
 );
@@ -91,39 +91,39 @@ export const telemetryLogs = sqliteTable(
     ).on(table.monitoringNodeId, table.sequence),
     radonConditionCheck: check(
       "telemetry_logs_radon_condition_check",
-      sql`${table.radonCondition} IN ('Normal', 'Warning', 'Danger')`,
+      sql`radon_condition IN ('Normal', 'Warning', 'Danger')`,
     ),
     radonThresholdCheck: check(
       "telemetry_logs_radon_threshold_check",
-      sql`${table.radonMinThreshold} < ${table.radonMaxThreshold}`,
+      sql`radon_min_threshold < radon_max_threshold`,
     ),
     soilMoistureConditionCheck: check(
       "telemetry_logs_soil_moisture_condition_check",
-      sql`${table.soilMoistureCondition} IN ('Normal', 'Warning', 'Danger')`,
+      sql`soil_moisture_condition IN ('Normal', 'Warning', 'Danger')`,
     ),
     soilMoistureThresholdCheck: check(
       "telemetry_logs_soil_moisture_threshold_check",
-      sql`${table.soilMoistureMinThreshold} < ${table.soilMoistureMaxThreshold}`,
+      sql`soil_moisture_min_threshold < soil_moisture_max_threshold`,
     ),
     gyroConditionCheck: check(
       "telemetry_logs_gyro_condition_check",
-      sql`${table.gyroCondition} IN ('Normal', 'Warning', 'Danger')`,
+      sql`gyro_condition IN ('Normal', 'Warning', 'Danger')`,
     ),
     gyroThresholdCheck: check(
       "telemetry_logs_gyro_threshold_check",
-      sql`${table.gyroMinThreshold} < ${table.gyroMaxThreshold}`,
+      sql`gyro_min_threshold < gyro_max_threshold`,
     ),
     rainfallConditionCheck: check(
       "telemetry_logs_rainfall_condition_check",
-      sql`${table.rainfallCondition} IN ('Normal', 'Warning', 'Danger')`,
+      sql`rainfall_condition IN ('Normal', 'Warning', 'Danger')`,
     ),
     rainfallThresholdCheck: check(
       "telemetry_logs_rainfall_threshold_check",
-      sql`${table.rainfallMinThreshold} < ${table.rainfallMaxThreshold}`,
+      sql`rainfall_min_threshold < rainfall_max_threshold`,
     ),
     overallConditionCheck: check(
       "telemetry_logs_overall_condition_check",
-      sql`${table.overallCondition} IN ('Normal', 'Warning', 'Danger')`,
+      sql`overall_condition IN ('Normal', 'Warning', 'Danger')`,
     ),
   }),
 );
