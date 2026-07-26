@@ -34,9 +34,16 @@ export function Overview() {
   const isLoading = isNodesLoading || isTelemetryLoading;
 
   // Newest first (the API orders by receivedAt desc), filtered to the window.
-  const cutoff = Math.floor(Date.now() / 1000) - rangeHours * 3600;
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const cutoff = nowSeconds - rangeHours * 3600;
   const rangedLogs = (logs ?? []).filter((l) => l.deviceTimestamp >= cutoff);
   const latest = rangedLogs[0] ?? logs?.[0];
+
+  // The cards fall back to the last known reading even when it predates the
+  // selected window, so it must be labelled: presenting a two-year-old value
+  // under "SENSOR REAL-TIME" as if it were current is exactly the kind of thing
+  // a safety dashboard must not do.
+  const isStale = Boolean(latest && latest.deviceTimestamp < cutoff);
 
   const pageCount = Math.max(1, Math.ceil(rangedLogs.length / ROWS_PER_PAGE));
   const safePage = Math.min(page, pageCount - 1);
@@ -62,6 +69,14 @@ export function Overview() {
               ? `Update terakhir: ${formatDateTime(latest.receivedAt)} WIB`
               : "Belum ada pembacaan sensor"}
           </p>
+          {isStale && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1 font-label-caps text-[11px] font-bold uppercase tracking-wider text-orange-700">
+              <span className="material-symbols-outlined text-[14px]">
+                history
+              </span>
+              Data kedaluwarsa — tidak ada pembacaan baru pada rentang ini
+            </p>
+          )}
         </div>
         <div
           className={`flex items-center gap-4 px-6 py-4 rounded-full border ${style.pill}`}
@@ -92,7 +107,7 @@ export function Overview() {
       <section className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="font-label-caps text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-            SENSOR REAL-TIME
+            {isStale ? "PEMBACAAN TERAKHIR DIKETAHUI" : "SENSOR REAL-TIME"}
           </h2>
           <Link
             to="/map"
