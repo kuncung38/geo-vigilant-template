@@ -84,6 +84,7 @@ vi.mock("maplibre-gl", () => {
       NavigationControl: class {},
       ScaleControl: class {},
       FullscreenControl: class {},
+      AttributionControl: class {},
     },
   };
 });
@@ -126,7 +127,7 @@ describe("MapOverview Page Component", () => {
     })) as unknown as typeof fetch;
   });
 
-  it("renders the map title, zone markers, and legend", async () => {
+  it("renders the map title and the status legend", async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -135,9 +136,8 @@ describe("MapOverview Page Component", () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByText(/Sensor Cluster Network/i)).toBeTruthy();
-    expect(screen.getByText(/Live Topography/i)).toBeTruthy();
-    expect(screen.getByText(/Cluster Status Legend/i)).toBeTruthy();
+    expect(screen.getByText(/Jaringan Klaster Sensor/i)).toBeTruthy();
+    expect(screen.getByText(/Legenda Status Klaster/i)).toBeTruthy();
   });
 
   // The map is lazy-loaded, so these assertions await the Suspense boundary.

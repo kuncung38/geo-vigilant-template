@@ -18,7 +18,10 @@ export function AlertSystem({ nodes = [] }: AlertSystemProps) {
   if (alertNodes.length === 0) return null;
 
   return (
-    <div className="fixed top-20 right-4 z-50 max-w-sm w-full space-y-3 pointer-events-none">
+    // Anchored bottom-right: pinned to the top-right these toasts sat on top of
+    // the status pill, the fourth metric card and the map's controls. The main
+    // content reserves matching bottom padding so nothing hides underneath.
+    <div className="fixed bottom-4 right-4 z-50 w-80 max-w-[calc(100%-2rem)] space-y-3 pointer-events-none">
       {alertNodes.map((node) => {
         const isDanger = node.overallCondition === "Danger";
         return (

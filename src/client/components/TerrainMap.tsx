@@ -1,6 +1,7 @@
 import maplibregl from "maplibre-gl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MonitoringNode } from "../api/client";
+import { conditionStyle } from "../lib/telemetry";
 
 /**
  * Free, key-less 3D map stack:
@@ -10,15 +11,15 @@ import type { MonitoringNode } from "../api/client";
  */
 const BASEMAPS = {
   positron: {
-    label: "Clinical",
+    label: "Klinis",
     url: "https://tiles.openfreemap.org/styles/positron",
   },
   liberty: {
-    label: "Detailed",
+    label: "Detail",
     url: "https://tiles.openfreemap.org/styles/liberty",
   },
   bright: {
-    label: "Terrain",
+    label: "Medan",
     url: "https://tiles.openfreemap.org/styles/bright",
   },
 } as const;
@@ -43,12 +44,6 @@ export interface MapNode {
   longitude: number;
   overallCondition: MonitoringNode["overallCondition"];
 }
-
-const STATUS_COLOR: Record<MonitoringNode["overallCondition"], string> = {
-  Normal: "#10b981",
-  Warning: "#f97316",
-  Danger: "#dc2626",
-};
 
 /** Camera framing for West Java's landslide corridor when no nodes are loaded yet. */
 const FALLBACK_CENTER: [number, number] = [107.55, -6.95];
@@ -164,7 +159,9 @@ export function TerrainMap({
         pitch: 62,
         bearing: -17,
         maxPitch: 85,
-        attributionControl: { compact: true },
+        // Placed manually below so it shares the top-right stack and can never be
+        // clipped by the app's bottom-right alert toasts (OSM/DEM credit must stay visible).
+        attributionControl: false,
         canvasContextAttributes: { antialias: true },
       });
     } catch (err) {
@@ -177,13 +174,17 @@ export function TerrainMap({
 
     map.addControl(
       new maplibregl.NavigationControl({ visualizePitch: true }),
-      "bottom-right",
+      "top-right",
     );
     map.addControl(
       new maplibregl.ScaleControl({ maxWidth: 120, unit: "metric" }),
-      "bottom-right",
+      "top-right",
     );
-    map.addControl(new maplibregl.FullscreenControl(), "bottom-right");
+    map.addControl(new maplibregl.FullscreenControl(), "top-right");
+    map.addControl(
+      new maplibregl.AttributionControl({ compact: true }),
+      "top-right",
+    );
 
     map.on("load", () => {
       applyTerrain(map, viewRef.current.exaggeration, viewRef.current.is3D);
@@ -237,7 +238,7 @@ export function TerrainMap({
 
     for (const node of nodes) {
       seen.add(node.id);
-      const color = STATUS_COLOR[node.overallCondition];
+      const color = conditionStyle(node.overallCondition).marker;
       const existing = markersRef.current.get(node.id);
 
       if (existing) {
@@ -329,7 +330,7 @@ export function TerrainMap({
       <div className="absolute inset-0 flex items-center justify-center bg-surface-container-low p-6 text-center">
         <div>
           <p className="font-label-caps text-xs uppercase tracking-wider text-outline">
-            Terrain renderer unavailable
+            Penampil medan tidak tersedia
           </p>
           <p className="font-data-mono mt-2 text-sm text-on-surface-variant">
             {failure}
@@ -347,8 +348,11 @@ export function TerrainMap({
         data-testid="terrain-map"
       />
 
-      {/* View controls — top right, clear of the legend panels. */}
-      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+      {/*
+        View controls sit top-left: the app's alert toasts are pinned to the
+        top-right of the viewport and would cover them there.
+      */}
+      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 items-start">
         <div className="flex overflow-hidden rounded-lg border border-outline-variant bg-white/95 shadow-sm backdrop-blur">
           <button
             type="button"
@@ -404,7 +408,7 @@ export function TerrainMap({
               value={exaggeration}
               onChange={(e) => setExaggeration(Number(e.target.value))}
               className="mt-1 w-28 accent-secondary-container"
-              aria-label="Terrain exaggeration"
+              aria-label="Pembesaran relief"
             />
           </label>
         )}

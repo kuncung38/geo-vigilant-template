@@ -6,9 +6,16 @@ import type { AppEnv } from "../types";
 
 const nodesRoute = new Hono<AppEnv>();
 
+/**
+ * getDb() is intentionally untyped so it can back either D1 or bun:sqlite, so
+ * annotate query results here to keep the route type-safe — notably ensuring
+ * deviceTokenHash is a known field that we strip before responding.
+ */
+type MonitoringNodeRow = typeof monitoringNodes.$inferSelect;
+
 nodesRoute.get("/", async (c) => {
   const db = getDb(c.env.DB);
-  const rows = await db.select().from(monitoringNodes);
+  const rows: MonitoringNodeRow[] = await db.select().from(monitoringNodes);
   const safeRows = rows.map(({ deviceTokenHash, ...rest }) => rest);
   return c.json(safeRows, 200);
 });
@@ -16,7 +23,7 @@ nodesRoute.get("/", async (c) => {
 nodesRoute.get("/:id", async (c) => {
   const db = getDb(c.env.DB);
   const id = c.req.param("id");
-  const [node] = await db
+  const [node]: MonitoringNodeRow[] = await db
     .select()
     .from(monitoringNodes)
     .where(eq(monitoringNodes.id, id))

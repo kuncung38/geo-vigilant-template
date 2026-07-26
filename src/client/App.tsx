@@ -21,10 +21,11 @@ export function AppContent() {
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-body-md">
-      <Navbar primaryNodeId={nodes?.[0]?.id} />
+      <Navbar primaryNodeId={nodes?.[0]?.id} nodes={nodes} />
       <AlertSystem nodes={nodes} />
       <div className="flex pt-16 min-h-screen pb-16 md:pb-0">
-        <main className="flex-1 md:ml-64 overflow-y-auto p-gutter md:p-margin-desktop bg-background">
+        {/* pb-40 keeps page content clear of the fixed alert stack (bottom-right). */}
+        <main className="flex-1 md:ml-64 overflow-y-auto p-gutter md:p-margin-desktop pb-40 md:pb-40 bg-background">
           <Routes>
             <Route path="/" element={<Overview />} />
             <Route path="/map" element={<MapOverview />} />

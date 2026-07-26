@@ -1,4 +1,6 @@
-import { Link, useLocation } from "react-router-dom";
+import { type FormEvent, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import type { MonitoringNode } from "../api/client";
 
 /** Used until live node data arrives; must be a node that actually exists. */
 const FALLBACK_NODE_ID = "NODE-C4-A1";
@@ -10,17 +12,29 @@ interface NavbarProps {
    * which broke once that demo record was removed.
    */
   primaryNodeId?: string;
+  /** Real registry, so the location picker lists nodes that actually exist. */
+  nodes?: MonitoringNode[];
 }
 
-export function Navbar({ primaryNodeId }: NavbarProps) {
+export function Navbar({ primaryNodeId, nodes = [] }: NavbarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
 
+  // Search hands off to the map, which owns cluster filtering.
+  function handleSearch(event: FormEvent) {
+    event.preventDefault();
+    const query = search.trim();
+    navigate(query ? `/map?q=${encodeURIComponent(query)}` : "/map");
+  }
+
+  // One label per entry: the sidebar previously rendered "DASHBOARD (OVERVIEW)"
+  // by concatenating two names for the same destination.
   const navItems = [
-    { name: "Overview", label: "Dashboard", path: "/", icon: "dashboard" },
-    { name: "Map View", label: "Topography", path: "/map", icon: "map" },
+    { label: "Dasbor", path: "/", icon: "dashboard" },
+    { label: "Topografi", path: "/map", icon: "map" },
     {
-      name: "Node Detail",
-      label: "Sensor Clusters",
+      label: "Klaster Sensor",
       path: `/nodes/${primaryNodeId ?? FALLBACK_NODE_ID}`,
       icon: "hub",
     },
@@ -46,27 +60,50 @@ export function Navbar({ primaryNodeId }: NavbarProps) {
               >
                 location_on
               </span>
-              <select className="bg-transparent border-none focus:ring-0 font-body-md text-on-surface pr-8 py-0 cursor-pointer">
-                <option>Cianjur - Sektor 4</option>
-                <option>Cianjur - Sektor 1</option>
-                <option>Sumedang - Zona B</option>
+              <select
+                aria-label="Pilih lokasi sensor"
+                value={
+                  location.pathname.startsWith("/nodes/")
+                    ? location.pathname.slice("/nodes/".length)
+                    : ""
+                }
+                onChange={(e) => {
+                  if (e.target.value) navigate(`/nodes/${e.target.value}`);
+                }}
+                className="bg-transparent border-none focus:ring-0 font-body-md text-on-surface pr-8 py-0 cursor-pointer"
+              >
+                <option value="" disabled>
+                  {nodes.length ? "Pilih lokasi" : "Memuat lokasi..."}
+                </option>
+                {nodes.map((node) => (
+                  <option key={node.id} value={node.id}>
+                    {node.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center bg-surface-container-low border border-outline-variant rounded-lg px-3 py-1.5 w-64">
+            <form
+              onSubmit={handleSearch}
+              className="hidden md:flex items-center bg-surface-container-low border border-outline-variant rounded-lg px-3 py-1.5 w-64"
+            >
               <input
                 className="bg-transparent border-none focus:outline-none focus:ring-0 w-full font-body-md text-on-surface placeholder-outline"
                 placeholder="Cari sensor..."
-                type="text"
+                type="search"
+                aria-label="Cari sensor"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
-              <span
-                className="material-symbols-outlined text-outline"
-                data-icon="search"
+              <button
+                type="submit"
+                aria-label="Cari"
+                className="text-outline hover:text-on-surface transition-colors"
               >
-                search
-              </span>
-            </div>
+                <span className="material-symbols-outlined">search</span>
+              </button>
+            </form>
           </div>
         </div>
       </header>
@@ -102,7 +139,7 @@ export function Navbar({ primaryNodeId }: NavbarProps) {
                 location.pathname.startsWith("/nodes"));
             return (
               <Link
-                key={item.name}
+                key={item.path}
                 to={item.path}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-all ${
                   isActive
@@ -117,7 +154,7 @@ export function Navbar({ primaryNodeId }: NavbarProps) {
                   {item.icon}
                 </span>
                 <span className="font-label-caps text-xs uppercase tracking-wider">
-                  {item.label} ({item.name})
+                  {item.label}
                 </span>
               </Link>
             );
@@ -135,7 +172,7 @@ export function Navbar({ primaryNodeId }: NavbarProps) {
               location.pathname.startsWith("/nodes"));
           return (
             <Link
-              key={item.name}
+              key={item.path}
               to={item.path}
               className={`flex flex-col items-center justify-center gap-1 ${
                 isActive

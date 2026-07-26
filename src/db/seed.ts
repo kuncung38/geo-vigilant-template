@@ -145,8 +145,22 @@ export async function seedDatabase(db: any) {
   }
 }
 
-// Local CLI execution helper
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+// Local CLI execution helper.
+// The previous check compared process.argv[1] against the module URL's raw
+// pathname. That never matched on Windows ("E:\...\seed.ts" vs "/E:/.../seed.ts")
+// and also breaks on any path containing a space, since pathname is
+// percent-encoded. fileURLToPath handles both, so use it and compare resolved
+// paths — otherwise `bun run db:seed:local` silently seeds nothing.
+function isRunDirectly(): boolean {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  const { fileURLToPath } = require("node:url");
+  const { resolve } = require("node:path");
+  const normalize = (p: string) => resolve(p).replace(/\\/g, "/").toLowerCase();
+  return normalize(fileURLToPath(import.meta.url)) === normalize(entry);
+}
+
+if (isRunDirectly()) {
   // Try to find the local wrangler database
   let sqliteDbPath =
     ".wrangler/state/v3/d1/miniflare-D1DatabaseObject/xxxx-xxxx-xxxx-xxxx.sqlite";

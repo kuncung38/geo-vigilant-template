@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import type { TelemetryLog } from "../api/client";
+import { SENSORS, formatTime } from "../lib/telemetry";
 
 interface TelemetryChartProps {
   logs: TelemetryLog[] | undefined;
@@ -47,13 +48,9 @@ export function TelemetryChart({ logs = [], isLoading }: TelemetryChartProps) {
   const chartData = [...logs]
     .sort((a, b) => a.deviceTimestamp - b.deviceTimestamp)
     .map((log) => {
-      const date = new Date(log.deviceTimestamp);
       return {
-        timestamp: date.toLocaleTimeString("id-ID", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
+        // deviceTimestamp is in seconds; formatTime converts before formatting.
+        timestamp: formatTime(log.deviceTimestamp),
         radon: log.radonValue,
         radonMax: log.radonMaxThreshold,
         moisture: log.soilMoistureValue,
@@ -65,40 +62,33 @@ export function TelemetryChart({ logs = [], isLoading }: TelemetryChartProps) {
       };
     });
 
-  const sensorConfig = {
-    radon: {
-      label: "Konsentrasi Radon",
-      unit: "Bq/m³",
-      dataKey: "radon",
-      maxKey: "radonMax",
-      color: "#10b981",
-      icon: "radiation",
-    },
-    moisture: {
-      label: "Kelembaban Tanah",
-      unit: "%",
-      dataKey: "moisture",
-      maxKey: "moistureMax",
-      color: "#3b82f6",
-      icon: "opacity",
-    },
-    gyro: {
-      label: "Kemiringan Gyro",
-      unit: "°/s",
-      dataKey: "gyro",
-      maxKey: "gyroMax",
-      color: "#f59e0b",
-      icon: "explore",
-    },
-    rainfall: {
-      label: "Curah Hujan",
-      unit: "mm/h",
-      dataKey: "rainfall",
-      maxKey: "rainfallMax",
-      color: "#6366f1",
-      icon: "umbrella",
-    },
-  };
+  // Sensor metadata is shared with the dashboard cards so labels, units, icons
+  // and colours cannot drift between views.
+  const sensorConfig = Object.fromEntries(
+    SENSORS.map((sensor) => [
+      sensor.key,
+      {
+        label: sensor.label,
+        unit: sensor.unit,
+        dataKey: sensor.key,
+        maxKey: `${sensor.key}Max`,
+        color: sensor.color,
+        icon: sensor.icon,
+        digits: sensor.digits,
+      },
+    ]),
+  ) as Record<
+    SensorType,
+    {
+      label: string;
+      unit: string;
+      dataKey: string;
+      maxKey: string;
+      color: string;
+      icon: string;
+      digits: number;
+    }
+  >;
 
   const currentConfig = sensorConfig[selectedSensor];
 
@@ -196,8 +186,18 @@ export function TelemetryChart({ logs = [], isLoading }: TelemetryChartProps) {
                 stroke="#76777d"
                 tick={{ fontSize: 10 }}
               />
-              <YAxis stroke="#76777d" tick={{ fontSize: 10 }} />
+              <YAxis
+                stroke="#76777d"
+                tick={{ fontSize: 10 }}
+                tickFormatter={(value: number) =>
+                  Number(value).toFixed(currentConfig.digits === 2 ? 1 : 0)
+                }
+              />
               <Tooltip
+                formatter={(value: number | string) => [
+                  `${Number(value).toFixed(currentConfig.digits)} ${currentConfig.unit}`,
+                  currentConfig.label,
+                ]}
                 contentStyle={{
                   backgroundColor: "#ffffff",
                   borderColor: "#c6c6cd",

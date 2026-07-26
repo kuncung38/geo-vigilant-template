@@ -1,19 +1,49 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useNodes } from "../hooks/useNodes";
+import { useTelemetry } from "../hooks/useTelemetry";
+import {
+  SENSORS,
+  conditionStyle,
+  formatDateTime,
+  formatReading,
+  thresholdRatio,
+} from "../lib/telemetry";
+
+/** Selectable history windows, in hours. */
+const RANGES = [
+  { label: "1 Jam Terakhir", hours: 1 },
+  { label: "24 Jam Terakhir", hours: 24 },
+  { label: "7 Hari Terakhir", hours: 24 * 7 },
+];
+
+const ROWS_PER_PAGE = 8;
 
 export function Overview() {
-  const { data: nodes, isLoading, error } = useNodes();
+  const { data: nodes, isLoading: isNodesLoading, error } = useNodes();
+  const [rangeHours, setRangeHours] = useState(24);
+  const [page, setPage] = useState(0);
 
-  const primaryNode = nodes?.[0] || {
-    id: "NODE-C4-A1",
-    name: "Cianjur Sektor 4",
-    latitude: -6.8168,
-    longitude: 107.1425,
-    overallCondition: "Normal" as const,
-  };
+  const primaryNode = nodes?.[0];
+  const { data: logs, isLoading: isTelemetryLoading } = useTelemetry(
+    primaryNode?.id,
+    100,
+  );
 
-  const isSafe = primaryNode.overallCondition === "Normal";
-  const isWarning = primaryNode.overallCondition === "Warning";
+  const style = conditionStyle(primaryNode?.overallCondition);
+  const isLoading = isNodesLoading || isTelemetryLoading;
+
+  // Newest first (the API orders by receivedAt desc), filtered to the window.
+  const cutoff = Math.floor(Date.now() / 1000) - rangeHours * 3600;
+  const rangedLogs = (logs ?? []).filter((l) => l.deviceTimestamp >= cutoff);
+  const latest = rangedLogs[0] ?? logs?.[0];
+
+  const pageCount = Math.max(1, Math.ceil(rangedLogs.length / ROWS_PER_PAGE));
+  const safePage = Math.min(page, pageCount - 1);
+  const visibleRows = rangedLogs.slice(
+    safePage * ROWS_PER_PAGE,
+    safePage * ROWS_PER_PAGE + ROWS_PER_PAGE,
+  );
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -21,41 +51,29 @@ export function Overview() {
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
         <div>
           <h1 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface mb-1">
-            Status Keamanan: {primaryNode.name} ({primaryNode.id})
+            Status Keamanan:{" "}
+            {primaryNode
+              ? `${primaryNode.name} (${primaryNode.id})`
+              : "Menunggu data node"}
           </h1>
           <p className="font-body-md text-on-surface-variant">
-            Update terakhir:{" "}
-            {new Date().toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-            , {new Date().toLocaleTimeString("id-ID")} WIB
+            {/* Sourced from the reading itself, not the render clock. */}
+            {latest
+              ? `Update terakhir: ${formatDateTime(latest.receivedAt)} WIB`
+              : "Belum ada pembacaan sensor"}
           </p>
         </div>
         <div
-          className={`flex items-center gap-4 px-6 py-4 rounded-full border ${
-            isSafe
-              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-              : isWarning
-                ? "bg-orange-50 border-orange-200 text-orange-700"
-                : "bg-red-50 border-red-200 text-red-700"
-          }`}
+          className={`flex items-center gap-4 px-6 py-4 rounded-full border ${style.pill}`}
         >
-          <span
-            className={`w-4 h-4 rounded-full animate-pulse ${
-              isSafe
-                ? "bg-emerald-500"
-                : isWarning
-                  ? "bg-orange-500"
-                  : "bg-red-500"
-            }`}
-          />
+          <span className={`w-4 h-4 rounded-full animate-pulse ${style.dot}`} />
           <span className="font-headline-sm font-bold text-lg tracking-wide">
-            STATUS: {isSafe ? "AMAN" : isWarning ? "WASPADA" : "BAHAYA"}
+            STATUS: {primaryNode ? style.label : "—"}
           </span>
-          <span className="material-symbols-outlined" data-icon="verified_user">
-            {isSafe ? "verified_user" : "warning"}
+          <span className="material-symbols-outlined">
+            {primaryNode?.overallCondition === "Normal"
+              ? "verified_user"
+              : "warning"}
           </span>
         </div>
       </div>
@@ -77,7 +95,7 @@ export function Overview() {
             SENSOR REAL-TIME
           </h2>
           <Link
-            to={`/nodes/${primaryNode.id}`}
+            to="/map"
             className="text-primary font-bold text-xs hover:underline"
           >
             LIHAT SEMUA NODE &rarr;
@@ -85,151 +103,53 @@ export function Overview() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Radon Gauge */}
-          <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
-            <div className="flex justify-between items-start mb-4">
-              <span className="font-label-caps text-xs font-bold text-on-surface-variant">
-                RADON (BQ/M³)
-              </span>
-              <span
-                className="material-symbols-outlined text-primary"
-                data-icon="radiation"
-              >
-                mediation
-              </span>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="relative w-32 h-32 flex items-center justify-center mb-2">
-                <svg
-                  className="w-full h-full transform -rotate-90"
-                  role="img"
-                  aria-label="Radon concentration gauge"
-                >
-                  <circle
-                    className="text-surface-container-high"
-                    cx="64"
-                    cy="64"
-                    fill="transparent"
-                    r="58"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                  />
-                  <circle
-                    className="text-emerald-500"
-                    cx="64"
-                    cy="64"
-                    fill="transparent"
-                    r="58"
-                    stroke="currentColor"
-                    strokeDasharray="364.4"
-                    strokeDashoffset="100"
-                    strokeWidth="8"
-                  />
-                </svg>
-                <span className="absolute font-data-mono text-3xl font-bold">
-                  145
-                </span>
-              </div>
-              <div className="flex justify-between w-full font-data-mono text-[10px] text-outline">
-                <span>MIN: 120</span>
-                <span>AMBANG: 400</span>
-              </div>
-            </div>
-          </div>
+          {SENSORS.map((sensor) => {
+            const value = latest ? sensor.value(latest) : undefined;
+            const condition = latest ? sensor.condition(latest) : "Normal";
+            const sensorStyle = conditionStyle(condition);
+            const min = latest ? sensor.min(latest) : 0;
+            const max = latest ? sensor.max(latest) : 100;
+            const ratio =
+              value !== undefined ? thresholdRatio(value, min, max) : 0;
 
-          {/* Soil Moisture Card */}
-          <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
-            <div className="flex justify-between items-start mb-4">
-              <span className="font-label-caps text-xs font-bold text-on-surface-variant">
-                KELEMBABAN TANAH (%)
-              </span>
-              <span
-                className="material-symbols-outlined text-primary"
-                data-icon="opacity"
+            return (
+              <div
+                key={sensor.key}
+                className={`metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm ${sensorStyle.cardBorder}`}
               >
-                opacity
-              </span>
-            </div>
-            <div className="mt-2">
-              <span className="font-data-mono text-3xl font-bold">42.8%</span>
-              <div className="w-full h-2 bg-surface-container-high rounded-full mt-4 overflow-hidden">
-                <div className="bg-blue-500 h-full w-[42.8%]" />
-              </div>
-              <div className="mt-4 h-12">
-                <div className="w-full h-full opacity-30 flex items-end gap-1">
-                  <div className="flex-1 bg-blue-400 h-[60%]" />
-                  <div className="flex-1 bg-blue-400 h-[65%]" />
-                  <div className="flex-1 bg-blue-400 h-[58%]" />
-                  <div className="flex-1 bg-blue-400 h-[70%]" />
-                  <div className="flex-1 bg-blue-400 h-[62%]" />
-                  <div className="flex-1 bg-blue-400 h-[66%]" />
+                <div className="flex justify-between items-start mb-4">
+                  <span className="font-label-caps text-xs font-bold text-on-surface-variant">
+                    {sensor.short} ({sensor.unit})
+                  </span>
+                  <span className="material-symbols-outlined text-primary">
+                    {sensor.icon}
+                  </span>
+                </div>
+
+                <div className="flex items-baseline gap-2">
+                  <span className="font-data-mono text-3xl font-bold">
+                    {formatReading(value, sensor.digits)}
+                  </span>
+                  <span className={`text-xs font-bold ${sensorStyle.text}`}>
+                    {sensorStyle.label}
+                  </span>
+                </div>
+
+                {/* Fill tracks the reading against its own safety threshold. */}
+                <div className="w-full h-2 bg-surface-container-high rounded-full mt-4 overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ${sensorStyle.dot}`}
+                    style={{ width: `${Math.round(ratio * 100)}%` }}
+                  />
+                </div>
+
+                <div className="flex justify-between w-full font-data-mono text-[10px] text-outline mt-2">
+                  <span>MIN: {formatReading(min, sensor.digits)}</span>
+                  <span>AMBANG: {formatReading(max, sensor.digits)}</span>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Gyro Sensor */}
-          <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
-            <div className="flex justify-between items-start mb-4">
-              <span className="font-label-caps text-xs font-bold text-on-surface-variant">
-                PERGERAKAN (GYRO)
-              </span>
-              <span
-                className="material-symbols-outlined text-primary"
-                data-icon="explore"
-              >
-                explore
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center py-4">
-              <div className="relative w-24 h-24 border-2 border-dashed border-outline-variant rounded-full flex items-center justify-center">
-                <div className="w-1 h-16 bg-primary rounded-full transform rotate-12 origin-bottom transition-transform duration-1000" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-2 h-2 bg-red-500 rounded-full" />
-                </div>
-              </div>
-              <span className="font-data-mono text-lg font-bold mt-4">
-                0.02° / 0.1°
-              </span>
-              <p className="text-[10px] text-on-surface-variant font-bold mt-1">
-                Guncangan Terdeteksi:{" "}
-                <span className="text-emerald-600">SANGAT RENDAH</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Rainfall Gauge */}
-          <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
-            <div className="flex justify-between items-start mb-4">
-              <span className="font-label-caps text-xs font-bold text-on-surface-variant">
-                CURAH HUJAN (MM/H)
-              </span>
-              <span
-                className="material-symbols-outlined text-primary"
-                data-icon="umbrella"
-              >
-                umbrella
-              </span>
-            </div>
-            <div className="mt-2">
-              <span className="font-data-mono text-3xl font-bold">2.4</span>
-              <p className="font-body-md text-on-surface-variant">
-                Hujan Ringan
-              </p>
-              <div className="mt-8 grid grid-cols-7 gap-1">
-                <div className="h-8 bg-surface-container-high rounded-sm" />
-                <div className="h-10 bg-surface-container-high rounded-sm" />
-                <div className="h-14 bg-surface-container-high rounded-sm" />
-                <div className="h-12 bg-blue-400 rounded-sm" />
-                <div className="h-10 bg-blue-300 rounded-sm" />
-                <div className="h-16 bg-surface-container-high rounded-sm" />
-                <div className="h-8 bg-surface-container-high rounded-sm" />
-              </div>
-              <p className="text-[10px] text-outline text-center mt-2 font-data-mono">
-                Tren 24 Jam
-              </p>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </section>
 
@@ -238,182 +158,131 @@ export function Overview() {
         <div className="p-6 border-b border-outline-variant flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h2 className="font-headline-sm text-xl font-bold text-on-surface">
-              Data Historis & Log Sensor
+              Data Historis &amp; Log Sensor
             </h2>
             <p className="text-on-surface-variant font-body-md text-sm">
-              Riwayat pembacaan sensor 24 jam terakhir
+              Riwayat pembacaan sensor
+              {primaryNode ? ` untuk ${primaryNode.name}` : ""}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <select className="bg-surface border border-outline-variant rounded-lg text-sm font-semibold px-3 py-1.5 focus:ring-1 focus:ring-primary">
-              <option>1 Jam Terakhir</option>
-              <option defaultValue="24">24 Jam Terakhir</option>
-              <option>7 Hari Terakhir</option>
-            </select>
-            <button
-              type="button"
-              className="bg-surface border border-outline-variant p-2 rounded-lg hover:bg-surface-container-low transition-colors"
+            <select
+              value={rangeHours}
+              onChange={(e) => {
+                setRangeHours(Number(e.target.value));
+                setPage(0);
+              }}
+              aria-label="Rentang waktu"
+              className="bg-surface border border-outline-variant rounded-lg text-sm font-semibold px-3 py-1.5 focus:ring-1 focus:ring-primary"
             >
-              <span
-                className="material-symbols-outlined text-[20px]"
-                data-icon="filter_list"
-              >
-                filter_list
-              </span>
-            </button>
+              {RANGES.map((range) => (
+                <option key={range.hours} value={range.hours}>
+                  {range.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse zebra-table">
             <thead className="sticky-header font-label-caps text-xs text-on-surface-variant uppercase tracking-wider">
               <tr>
-                <th className="px-6 py-4 border-b border-outline-variant cursor-pointer hover:bg-surface-container-high">
-                  TIMESTAMP{" "}
-                  <span
-                    className="material-symbols-outlined text-[12px]"
-                    data-icon="arrow_drop_down"
-                  >
-                    arrow_drop_down
-                  </span>
+                <th className="px-6 py-4 border-b border-outline-variant">
+                  TIMESTAMP
                 </th>
                 <th className="px-6 py-4 border-b border-outline-variant">
                   LOKASI
                 </th>
-                <th className="px-6 py-4 border-b border-outline-variant">
-                  RADON
-                </th>
-                <th className="px-6 py-4 border-b border-outline-variant">
-                  KELEMBABAN
-                </th>
-                <th className="px-6 py-4 border-b border-outline-variant">
-                  GYRO
-                </th>
-                <th className="px-6 py-4 border-b border-outline-variant">
-                  HUJAN
-                </th>
+                {SENSORS.map((sensor) => (
+                  <th
+                    key={sensor.key}
+                    className="px-6 py-4 border-b border-outline-variant"
+                  >
+                    {sensor.short}
+                  </th>
+                ))}
                 <th className="px-6 py-4 border-b border-outline-variant text-center">
                   STATUS
                 </th>
               </tr>
             </thead>
             <tbody className="font-data-mono text-sm">
-              <tr className="hover:bg-surface-container-low transition-colors">
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  2026-07-26 14:30:00
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  {primaryNode.id}
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  145.2
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  42.8%
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  0.02°
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  2.4 mm
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant text-center">
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">
-                    NORMAL
-                  </span>
-                </td>
-              </tr>
-              <tr className="hover:bg-surface-container-low transition-colors">
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  2026-07-26 14:15:00
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  {primaryNode.id}
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  158.4
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant text-orange-600 font-bold">
-                  78.5%
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  0.05°
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  12.2 mm
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant text-center">
-                  <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full font-bold text-[10px]">
-                    WARNING
-                  </span>
-                </td>
-              </tr>
-              <tr className="hover:bg-surface-container-low transition-colors">
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  2026-07-26 14:00:00
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  {primaryNode.id}
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  142.1
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  41.2%
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  0.01°
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  1.8 mm
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant text-center">
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">
-                    NORMAL
-                  </span>
-                </td>
-              </tr>
-              <tr className="hover:bg-surface-container-low transition-colors">
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  2026-07-26 13:45:00
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant text-red-600 font-bold">
-                  ALERT: {primaryNode.id}
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  412.2
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  92.1%
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  1.45°
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant">
-                  45.5 mm
-                </td>
-                <td className="px-6 py-4 border-b border-outline-variant text-center">
-                  <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-bold text-[10px]">
-                    DANGER
-                  </span>
-                </td>
-              </tr>
+              {visibleRows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={SENSORS.length + 3}
+                    className="px-6 py-10 text-center text-on-surface-variant"
+                  >
+                    {isLoading
+                      ? "Memuat riwayat sensor..."
+                      : "Tidak ada pembacaan pada rentang waktu ini."}
+                  </td>
+                </tr>
+              ) : (
+                visibleRows.map((log) => {
+                  const rowStyle = conditionStyle(log.overallCondition);
+                  return (
+                    <tr
+                      key={log.id}
+                      className="hover:bg-surface-container-low transition-colors"
+                    >
+                      <td className="px-6 py-4 border-b border-outline-variant">
+                        {formatDateTime(log.deviceTimestamp)}
+                      </td>
+                      <td className="px-6 py-4 border-b border-outline-variant">
+                        {log.monitoringNodeId}
+                      </td>
+                      {SENSORS.map((sensor) => {
+                        const cellStyle = conditionStyle(sensor.condition(log));
+                        const isAlert = sensor.condition(log) !== "Normal";
+                        return (
+                          <td
+                            key={sensor.key}
+                            className={`px-6 py-4 border-b border-outline-variant ${
+                              isAlert ? `${cellStyle.text} font-bold` : ""
+                            }`}
+                          >
+                            {formatReading(sensor.value(log), sensor.digits)}
+                          </td>
+                        );
+                      })}
+                      <td className="px-6 py-4 border-b border-outline-variant text-center">
+                        <span
+                          className={`px-3 py-1 rounded-full font-bold text-[10px] ${rowStyle.chip}`}
+                        >
+                          {log.overallCondition.toUpperCase()}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
+
         <div className="p-4 bg-surface-container-low border-t border-outline-variant flex justify-between items-center">
           <span className="text-[12px] font-semibold text-on-surface-variant uppercase">
-            Menampilkan 4 dari 96 entri
+            Menampilkan {visibleRows.length} dari {rangedLogs.length} entri
           </span>
           <div className="flex gap-2">
             <button
               type="button"
-              className="px-3 py-1 border border-outline-variant rounded-lg text-sm bg-white hover:bg-surface-container-low"
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={safePage === 0}
+              className="px-3 py-1 border border-outline-variant rounded-lg text-sm bg-white hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Prev
             </button>
+            <span className="px-2 py-1 font-data-mono text-xs text-on-surface-variant">
+              {safePage + 1} / {pageCount}
+            </span>
             <button
               type="button"
-              className="px-3 py-1 border border-outline-variant rounded-lg text-sm bg-white hover:bg-surface-container-low"
+              onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              disabled={safePage >= pageCount - 1}
+              className="px-3 py-1 border border-outline-variant rounded-lg text-sm bg-white hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next
             </button>

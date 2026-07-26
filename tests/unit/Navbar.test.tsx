@@ -13,6 +13,7 @@ describe("Navbar Component", () => {
     );
 
     expect(screen.getByText(/GEO-VIGILANT/i)).toBeTruthy();
-    expect(screen.getByText(/Overview/i)).toBeTruthy();
+    expect(screen.getAllByText(/Dasbor/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Topografi/i).length).toBeGreaterThan(0);
   });
 });

@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { TelemetryChart } from "../components/TelemetryChart";
 import { useNode } from "../hooks/useNodes";
 import { useTelemetry } from "../hooks/useTelemetry";
+import { SENSORS, conditionStyle, formatReading } from "../lib/telemetry";
 
 export function NodeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -13,16 +14,10 @@ export function NodeDetail() {
   const { data: telemetryLogs, isLoading: isTelemetryLoading } =
     useTelemetry(id);
 
-  const displayNode = node || {
-    id: id || "NODE-C4-A1",
-    name: "Cianjur Sektor 4",
-    latitude: -6.8168,
-    longitude: 107.1425,
-    overallCondition: "Normal" as const,
-  };
-
-  const isSafe = displayNode.overallCondition === "Normal";
-  const isWarning = displayNode.overallCondition === "Warning";
+  // No invented stand-in node: showing a plausible "Normal" placeholder for a
+  // node we failed to load would misreport safety.
+  const displayNode = node;
+  const nodeStyle = conditionStyle(displayNode?.overallCondition);
 
   // Calculate current readings from latest telemetry log if available
   const latestLog =
@@ -47,32 +42,30 @@ export function NodeDetail() {
             </Link>
           </div>
           <h1 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface mt-2">
-            Diagnostik Sensor: {displayNode.name} ({displayNode.id})
+            Diagnostik Sensor:{" "}
+            {displayNode ? `${displayNode.name} (${displayNode.id})` : id}
           </h1>
           <p className="text-on-surface-variant font-body-md text-sm mt-1">
-            Koordinat: {displayNode.latitude}, {displayNode.longitude} |
-            Multi-sensor telemetry & alert thresholds
+            {displayNode
+              ? `Koordinat: ${displayNode.latitude}, ${displayNode.longitude}`
+              : "Koordinat tidak tersedia"}{" "}
+            | Telemetri multi-sensor &amp; ambang peringatan
           </p>
         </div>
         <div
           className={`flex items-center gap-3 px-5 py-3 rounded-full border font-headline-sm text-sm font-bold ${
-            isSafe
-              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-              : isWarning
-                ? "bg-orange-50 border-orange-200 text-orange-700"
-                : "bg-red-50 border-red-200 text-red-700"
+            displayNode
+              ? nodeStyle.pill
+              : "bg-surface-container-low border-outline-variant text-on-surface-variant"
           }`}
         >
           <span
-            className={`w-3 h-3 rounded-full animate-pulse ${
-              isSafe
-                ? "bg-emerald-500"
-                : isWarning
-                  ? "bg-orange-500"
-                  : "bg-red-500"
+            className={`w-3 h-3 rounded-full ${
+              displayNode ? `animate-pulse ${nodeStyle.dot}` : "bg-outline"
             }`}
           />
-          STATUS: {displayNode.overallCondition.toUpperCase()}
+          STATUS:{" "}
+          {displayNode ? displayNode.overallCondition.toUpperCase() : "—"}
         </div>
       </div>
 
@@ -87,61 +80,38 @@ export function NodeDetail() {
       ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
-          <h3 className="font-label-caps text-xs text-on-surface-variant">
-            KONSENTRASI RADON
-          </h3>
-          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">
-            {latestLog ? `${latestLog.radonValue} Bq/m³` : "45.2 Bq/m³"}
-          </p>
-          <div className="mt-2 text-xs text-emerald-600 font-bold">
-            {latestLog
-              ? `Ambang: ${latestLog.radonMaxThreshold}`
-              : "Normal (0 - 100)"}
-          </div>
-        </div>
-
-        <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
-          <h3 className="font-label-caps text-xs text-on-surface-variant">
-            KELEMBABAN TANAH
-          </h3>
-          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">
-            {latestLog ? `${latestLog.soilMoistureValue} %` : "40.5 %"}
-          </p>
-          <div className="mt-2 text-xs text-emerald-600 font-bold">
-            {latestLog
-              ? `Ambang: ${latestLog.soilMoistureMaxThreshold}`
-              : "Normal (20 - 80)"}
-          </div>
-        </div>
-
-        <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
-          <h3 className="font-label-caps text-xs text-on-surface-variant">
-            KEMIRINGAN / GYRO
-          </h3>
-          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">
-            {latestLog ? `${latestLog.gyroValue} °/s` : "0.15 °/s"}
-          </p>
-          <div className="mt-2 text-xs text-emerald-600 font-bold">
-            {latestLog
-              ? `Ambang: ${latestLog.gyroMaxThreshold}`
-              : "Normal (-1 - 1)"}
-          </div>
-        </div>
-
-        <div className="metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm status-safe">
-          <h3 className="font-label-caps text-xs text-on-surface-variant">
-            CURAH HUJAN
-          </h3>
-          <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">
-            {latestLog ? `${latestLog.rainfallValue} mm/h` : "0.5 mm/h"}
-          </p>
-          <div className="mt-2 text-xs text-emerald-600 font-bold">
-            {latestLog
-              ? `Ambang: ${latestLog.rainfallMaxThreshold}`
-              : "Normal (0 - 10)"}
-          </div>
-        </div>
+        {SENSORS.map((sensor) => {
+          // Colour follows the actual reading. These cards were previously
+          // pinned to the "safe" green regardless of the value shown.
+          const condition = latestLog ? sensor.condition(latestLog) : undefined;
+          const cardStyle = conditionStyle(condition);
+          return (
+            <div
+              key={sensor.key}
+              className={`metric-card bg-surface-container-lowest p-6 rounded-xl shadow-sm ${
+                latestLog ? cardStyle.cardBorder : ""
+              }`}
+            >
+              <h3 className="font-label-caps text-xs text-on-surface-variant">
+                {sensor.label.toUpperCase()}
+              </h3>
+              <p className="text-2xl font-bold font-data-mono text-on-surface mt-2">
+                {latestLog
+                  ? `${formatReading(sensor.value(latestLog), sensor.digits)} ${sensor.unit}`
+                  : "—"}
+              </p>
+              <div
+                className={`mt-2 text-xs font-bold ${
+                  latestLog ? cardStyle.text : "text-outline"
+                }`}
+              >
+                {latestLog
+                  ? `${cardStyle.label} · Ambang: ${formatReading(sensor.max(latestLog), sensor.digits)}`
+                  : "Menunggu pembacaan"}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">

@@ -27,14 +27,16 @@ test.describe("3D terrain map", () => {
     // The count tracks whatever the API returns (seeded D1 and the offline fallback
     // differ), so compare against the registry rather than hardcoding a number.
     const registry = page.getByRole("heading", {
-      name: /Active Cluster Registry/i,
+      name: /Registri Klaster Aktif/i,
     });
     const expectedCount = Number(
-      (await registry.innerText()).match(/\((\d+) Nodes?\)/)?.[1],
+      (await registry.innerText()).match(/\((\d+) Node\)/)?.[1],
     );
     expect(expectedCount).toBeGreaterThan(0);
     await expect(page.locator(".gv-marker")).toHaveCount(expectedCount);
-    await expect(page.getByText("Cianjur Sektor 4").first()).toBeVisible();
+    await expect(
+      page.locator("main").getByText("Cianjur Sektor 4").first(),
+    ).toBeVisible();
 
     // Elevation data must actually stream in — this is what makes the map 3D.
     await expect
@@ -70,7 +72,7 @@ test.describe("3D terrain map", () => {
       .toMatch(/rotateX\((?!0deg)/);
 
     // Relief control is only meaningful while terrain is on.
-    await expect(page.getByLabel("Terrain exaggeration")).toBeVisible();
+    await expect(page.getByLabel("Pembesaran relief")).toBeVisible();
 
     await page.getByRole("button", { name: "2D", exact: true }).click();
 
@@ -78,7 +80,7 @@ test.describe("3D terrain map", () => {
     await expect
       .poll(async () => await compass.getAttribute("style"), { timeout: 15000 })
       .toMatch(/rotateX\(0deg\)/);
-    await expect(page.getByLabel("Terrain exaggeration")).toBeHidden();
+    await expect(page.getByLabel("Pembesaran relief")).toBeHidden();
   });
 
   test("selecting a cluster reveals its coordinates and telemetry link", async ({
@@ -89,9 +91,9 @@ test.describe("3D terrain map", () => {
 
     await page.locator(".gv-marker").first().click();
 
-    await expect(page.getByText("Selected Cluster")).toBeVisible();
+    await expect(page.getByText("Klaster Terpilih")).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /Open telemetry/i }),
+      page.getByRole("link", { name: /Buka telemetri/i }),
     ).toBeVisible();
   });
 
@@ -101,7 +103,7 @@ test.describe("3D terrain map", () => {
     const response = await page.goto("/map");
     expect(response?.status()).toBe(200);
     await expect(
-      page.getByText("Sensor Cluster Network").first(),
+      page.getByText("Jaringan Klaster Sensor").first(),
     ).toBeVisible();
   });
 });
