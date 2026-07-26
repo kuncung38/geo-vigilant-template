@@ -1,19 +1,26 @@
-export default function App() {
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Navbar } from "./components/Navbar";
+import { NodeDetail } from "./pages/NodeDetail";
+import { Overview } from "./pages/Overview";
+
+export function AppContent() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 p-6 flex flex-col items-center justify-center">
-      <header className="mb-8 text-center">
-        <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-          GEO-VIGILANT
-        </h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Landslide Monitoring & Telemetry Dashboard
-        </p>
-      </header>
-      <main className="w-full max-w-4xl rounded-xl bg-slate-900 border border-slate-800 p-6 shadow-xl text-center">
-        <p className="text-slate-300">
-          System Ready. Awaiting sensor telemetry...
-        </p>
+    <div className="min-h-screen bg-slate-950 text-slate-50 selection:bg-cyan-500 selection:text-slate-950 font-sans">
+      <Navbar />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Routes>
+          <Route path="/" element={<Overview />} />
+          <Route path="/nodes/:id" element={<NodeDetail />} />
+        </Routes>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
