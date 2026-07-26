@@ -62,4 +62,28 @@ describe("GET /api/telemetry", () => {
     const json = (await res.json()) as Array<{ sequence: number }>;
     expect(json.length).toBe(5);
   });
+
+  it("returns 404 for a node that does not exist", async () => {
+    const res = await app.request(
+      "/api/telemetry?nodeId=NO-SUCH-NODE",
+      {},
+      {
+        DB: db,
+      },
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("returns an empty list for a known node with no readings", async () => {
+    await drizzleDb.delete(schema.telemetryLogs);
+    const res = await app.request(
+      "/api/telemetry?nodeId=NODE-C4-A1",
+      {},
+      {
+        DB: db,
+      },
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual([]);
+  });
 });

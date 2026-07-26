@@ -29,6 +29,21 @@ const DEM_ATTRIBUTION =
 const TERRAIN_SOURCE = "geo-vigilant-dem";
 const HILLSHADE_SOURCE = "geo-vigilant-dem-hillshade";
 const HILLSHADE_LAYER = "geo-vigilant-hillshade";
+const RELIEF_LAYER = "geo-vigilant-color-relief";
+
+// Hypsometric ramp, metres above sea level. Sea stays deep so coastline reads,
+// then land climbs light and low-chroma: dark basemap labels stay legible over
+// it, and saturation is left to the node markers.
+const ELEVATION_RAMP: Array<[number, string]> = [
+  [0, "#2d4d6b"],
+  [40, "#7593a6"],
+  [300, "#95acb6"],
+  [700, "#aec0c2"],
+  [1200, "#c6cfc9"],
+  [1800, "#dbded4"],
+  [2400, "#ecebe2"],
+  [3100, "#fbfaf4"],
+];
 
 export interface MapNode {
   id: string;
@@ -93,20 +108,42 @@ export function TerrainMap({
         });
       }
 
+      const firstSymbol = map
+        .getStyle()
+        .layers?.find((layer) => layer.type === "symbol")?.id;
+
+      // Elevation tint first, relief shading over it, both under the labels.
+      if (!map.getLayer(RELIEF_LAYER)) {
+        map.addLayer(
+          {
+            id: RELIEF_LAYER,
+            type: "color-relief",
+            source: HILLSHADE_SOURCE,
+            paint: {
+              "color-relief-opacity": 0.9,
+              "color-relief-color": [
+                "interpolate",
+                ["linear"],
+                ["elevation"],
+                ...ELEVATION_RAMP.flat(),
+              ],
+            },
+          },
+          firstSymbol,
+        );
+      }
+
       if (!map.getLayer(HILLSHADE_LAYER)) {
-        const firstSymbol = map
-          .getStyle()
-          .layers?.find((layer) => layer.type === "symbol")?.id;
         map.addLayer(
           {
             id: HILLSHADE_LAYER,
             type: "hillshade",
             source: HILLSHADE_SOURCE,
             paint: {
-              "hillshade-shadow-color": "#213145",
-              "hillshade-highlight-color": "#f8f9ff",
-              "hillshade-accent-color": "#45464d",
-              "hillshade-exaggeration": 0.55,
+              "hillshade-shadow-color": "#16293d",
+              "hillshade-highlight-color": "#ffffff",
+              "hillshade-accent-color": "#3c5a72",
+              "hillshade-exaggeration": 0.7,
               "hillshade-illumination-direction": 315,
             },
           },
@@ -115,12 +152,12 @@ export function TerrainMap({
       }
 
       map.setSky({
-        "sky-color": "#8fb4e3",
-        "sky-horizon-blend": 0.6,
-        "horizon-color": "#d3e4fe",
-        "horizon-fog-blend": 0.6,
-        "fog-color": "#cbdbf5",
-        "fog-ground-blend": 0.05,
+        "sky-color": "#5b8bc4",
+        "sky-horizon-blend": 0.75,
+        "horizon-color": "#dce8f5",
+        "horizon-fog-blend": 0.7,
+        "fog-color": "#c3d5e8",
+        "fog-ground-blend": 0.12,
       });
 
       map.setTerrain(
@@ -257,7 +294,13 @@ export function TerrainMap({
         });
       });
 
-      const marker = new maplibregl.Marker({ element, anchor: "bottom" })
+      const marker = new maplibregl.Marker({
+        element,
+        anchor: "bottom",
+        // Default is 0.2, which all but hides a node sitting behind a ridge.
+        // A sensor in alarm must stay findable; depth is still cued by the fade.
+        opacityWhenCovered: "0.72",
+      })
         .setLngLat([node.longitude, node.latitude])
         .addTo(map);
       markersRef.current.set(node.id, marker);

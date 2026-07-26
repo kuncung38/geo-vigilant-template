@@ -1,8 +1,10 @@
 import { Link, useParams } from "react-router-dom";
+import { isNotFound } from "../api/client";
 import { TelemetryChart } from "../components/TelemetryChart";
 import { useNode } from "../hooks/useNodes";
 import { useTelemetry } from "../hooks/useTelemetry";
 import { SENSORS, conditionStyle, formatReading } from "../lib/telemetry";
+import { NotFound } from "./NotFound";
 
 export function NodeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +18,15 @@ export function NodeDetail() {
 
   const displayNode = node;
   const nodeStyle = conditionStyle(displayNode?.overallCondition);
+
+  if (isNotFound(nodeError)) {
+    return (
+      <NotFound
+        title="Klaster sensor tidak ditemukan"
+        detail={`Tidak ada node terdaftar dengan ID "${id}". Node mungkin sudah dinonaktifkan.`}
+      />
+    );
+  }
 
   const latestLog =
     telemetryLogs && telemetryLogs.length > 0 ? telemetryLogs[0] : null;

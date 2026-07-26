@@ -5,6 +5,7 @@ import { Navbar } from "./components/Navbar";
 import { useNodes } from "./hooks/useNodes";
 import { MapOverview } from "./pages/MapOverview";
 import { NodeDetail } from "./pages/NodeDetail";
+import { NotFound } from "./pages/NotFound";
 import { Overview } from "./pages/Overview";
 
 const queryClient = new QueryClient({
@@ -29,6 +30,7 @@ export function AppContent() {
             <Route path="/" element={<Overview />} />
             <Route path="/map" element={<MapOverview />} />
             <Route path="/nodes/:id" element={<NodeDetail />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
       </div>

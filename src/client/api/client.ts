@@ -1,10 +1,25 @@
+/** Carries the HTTP status so callers can tell "missing" from "broken". */
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, statusText: string) {
+    super(`API Error: ${statusText} (${status})`);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
+}
+
 export async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit,
 ): Promise<T> {
   const res = await fetch(endpoint, options);
   if (!res.ok) {
-    throw new Error(`API Error: ${res.statusText} (${res.status})`);
+    throw new ApiError(res.status, res.statusText);
   }
   return res.json() as Promise<T>;
 }

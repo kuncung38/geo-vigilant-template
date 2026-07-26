@@ -42,6 +42,18 @@ telemetryRoute.get("/", async (c) => {
   if (limit > 100) limit = 100;
 
   const db = getDb(c.env.DB);
+
+  // An unknown node is 404, not an empty list: [] must mean "node exists, no
+  // readings yet" so the client can tell a decommissioned node from a quiet one.
+  const [node] = await db
+    .select({ id: monitoringNodes.id })
+    .from(monitoringNodes)
+    .where(eq(monitoringNodes.id, nodeId))
+    .limit(1);
+  if (!node) {
+    return c.json({ error: "Not Found" }, 404);
+  }
+
   const logs = await db
     .select()
     .from(telemetryLogs)
