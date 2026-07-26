@@ -6,7 +6,11 @@
   "compatibility_date": "2024-12-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    // Bound so the Worker can delegate unmatched client routes (/map, /nodes/:id)
+    // back to the asset router instead of 404ing them.
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
   },
   "observability": {
     "enabled": true

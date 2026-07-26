@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { Link } from "react-router-dom";
 import { useNodes } from "../hooks/useNodes";
+
+// MapLibre is ~800 kB; keep it off the dashboard bundle and load it with this route.
+const TerrainMap = lazy(() =>
+  import("../components/TerrainMap").then((m) => ({ default: m.TerrainMap })),
+);
 
 export function MapOverview() {
   const { data: nodes, isLoading, error } = useNodes();
   const [searchQuery, setSearchQuery] = useState("");
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const displayNodes =
     nodes && nodes.length > 0
@@ -42,6 +47,9 @@ export function MapOverview() {
       n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       n.id.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  const selectedNode =
+    filteredNodes.find((n) => n.id === selectedNodeId) ?? null;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -106,56 +114,87 @@ export function MapOverview() {
           </div>
         </div>
 
-        {/* Map Background Canvas */}
-        <div
-          className="w-full h-full grayscale opacity-85 transition-transform duration-300 bg-cover bg-center"
-          style={{
-            transform: `scale(${zoomLevel})`,
-            backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuDV6tLZqc8DFu5R3nhRczCaEKZEeC7OE07FUuDNvzbkKEcYuDFa7oNhhXdbsJ7fWUqa9gAhXbdBK1lgJRLdzobqiM_Ohcvp5MP4gQPOfV4typyv-rnonGYzp2fzkAcHmV9jQlFIe6x_Cxz2Xl9Zntyfeif6CAo4qe6C9szzB_lrlGt9ZpSPSe8BnGGdtw8QEuMWAvtsJZyw7TjSTBCQZ12LIi5-l8F6XKWwtkHdV9colxbOoXCYv7JxHw')`,
-            backgroundColor: "#cbdbf5",
-          }}
-        />
+        {/* Real 3D terrain canvas — MapLibre GL over OpenStreetMap + SRTM elevation */}
+        <Suspense
+          fallback={
+            <div className="absolute inset-0 flex items-center justify-center bg-surface-container-low font-data-mono text-sm animate-pulse">
+              Loading terrain renderer...
+            </div>
+          }
+        >
+          <TerrainMap
+            nodes={filteredNodes}
+            selectedNodeId={selectedNodeId}
+            onSelectNode={(node) => setSelectedNodeId(node.id)}
+          />
+        </Suspense>
 
-        {/* Interactive Cluster Markers */}
-        <div className="absolute inset-0 pointer-events-none">
-          {filteredNodes.map((node, index) => {
-            const isNormal = node.overallCondition === "Normal";
-            const isWarning = node.overallCondition === "Warning";
-            const isDanger = node.overallCondition === "Danger";
-
-            // Map markers to distinct canvas quadrants for visual spacing
-            const positions = [
-              { top: "28%", left: "32%" },
-              { top: "52%", left: "58%" },
-              { top: "68%", left: "24%" },
-              { top: "35%", left: "72%" },
-            ];
-            const pos = positions[index % positions.length];
-
-            return (
-              <Link
-                key={node.id}
-                to={`/nodes/${node.id}`}
-                style={{ top: pos.top, left: pos.left }}
-                className={`absolute w-7 h-7 rounded-full border-4 border-white shadow-xl flex items-center justify-center pointer-events-auto cursor-pointer hover:scale-125 transition-transform ${
-                  isNormal
-                    ? "bg-emerald-500"
-                    : isWarning
-                      ? "bg-orange-500"
-                      : "bg-red-600 status-pulse"
-                }`}
+        {/* Selected cluster readout */}
+        {selectedNode && (
+          <div className="absolute top-28 left-4 z-10 w-64 rounded-lg border border-outline-variant bg-white/95 p-4 shadow-md backdrop-blur">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-label-caps text-[10px] uppercase tracking-wider text-outline">
+                  Selected Cluster
+                </p>
+                <p className="font-data-mono text-sm font-bold text-on-surface">
+                  {selectedNode.name}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedNodeId(null)}
+                aria-label="Clear selection"
+                className="text-outline hover:text-on-surface"
               >
-                <span className="absolute -top-9 bg-white/95 px-2.5 py-1 rounded-md text-[11px] font-bold font-data-mono shadow-md border border-outline-variant whitespace-nowrap text-on-surface">
-                  {node.name}
-                  {isDanger && " ⚠️"}
+                <span className="material-symbols-outlined text-base">
+                  close
                 </span>
-              </Link>
-            );
-          })}
-        </div>
+              </button>
+            </div>
+            <dl className="mt-3 space-y-1 font-data-mono text-[11px] text-on-surface-variant">
+              <div className="flex justify-between gap-2">
+                <dt>ID</dt>
+                <dd className="text-on-surface">{selectedNode.id}</dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt>Lat</dt>
+                <dd className="text-on-surface">
+                  {selectedNode.latitude.toFixed(4)}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt>Lon</dt>
+                <dd className="text-on-surface">
+                  {selectedNode.longitude.toFixed(4)}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt>Status</dt>
+                <dd
+                  className={
+                    selectedNode.overallCondition === "Normal"
+                      ? "text-emerald-600"
+                      : selectedNode.overallCondition === "Warning"
+                        ? "text-orange-600"
+                        : "text-red-600"
+                  }
+                >
+                  {selectedNode.overallCondition.toUpperCase()}
+                </dd>
+              </div>
+            </dl>
+            <Link
+              to={`/nodes/${selectedNode.id}`}
+              className="mt-3 block rounded border border-outline-variant px-3 py-1.5 text-center font-label-caps text-[11px] uppercase tracking-wider text-on-surface transition-colors hover:border-primary hover:bg-surface-container-low"
+            >
+              Open telemetry
+            </Link>
+          </div>
+        )}
 
         {/* Bottom-left Cluster Status Legend */}
-        <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur border border-outline-variant p-4 rounded-lg shadow-sm">
+        <div className="absolute bottom-4 left-4 z-10 bg-white/95 backdrop-blur border border-outline-variant p-4 rounded-lg shadow-sm">
           <p className="font-label-caps text-xs font-bold text-outline mb-2 uppercase tracking-wider">
             Cluster Status Legend
           </p>
@@ -173,28 +212,6 @@ export function MapOverview() {
               <span>Danger (&gt;350 Bq/m³ + Tilt)</span>
             </div>
           </div>
-        </div>
-
-        {/* Bottom-right Zoom Controls */}
-        <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
-          <button
-            type="button"
-            onClick={() => setZoomLevel((z) => Math.min(z + 0.25, 2.5))}
-            className="w-10 h-10 bg-white border border-outline-variant rounded-lg flex items-center justify-center text-primary shadow-sm hover:bg-surface-container transition-colors"
-          >
-            <span className="material-symbols-outlined" data-icon="zoom_in">
-              zoom_in
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setZoomLevel((z) => Math.max(z - 0.25, 0.75))}
-            className="w-10 h-10 bg-white border border-outline-variant rounded-lg flex items-center justify-center text-primary shadow-sm hover:bg-surface-container transition-colors"
-          >
-            <span className="material-symbols-outlined" data-icon="zoom_out">
-              zoom_out
-            </span>
-          </button>
         </div>
       </div>
 
