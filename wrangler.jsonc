@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "geo-vigilant",
+  "main": "src/server/index.ts",
+  "compatibility_date": "2024-12-01",
+  "assets": {
+    "directory": "./dist"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "geo-vigilant-db",
+      "database_id": "xxxx-xxxx-xxxx-xxxx"
+    }
+  ]
+}
