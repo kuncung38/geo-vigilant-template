@@ -1,5 +1,3 @@
-import { Database } from "bun:sqlite";
-import { drizzle } from "drizzle-orm/bun-sqlite";
 import * as schema from "./schema";
 
 // Create crypto hash in browser/worker friendly way or fallback to node
@@ -96,6 +94,10 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
   }
 
   try {
+    const sqliteMod = "bun:" + "sqlite";
+    const drizzleMod = "drizzle-orm/" + "bun-sqlite";
+    const { Database } = require(sqliteMod);
+    const { drizzle } = require(drizzleMod);
     const sqliteDb = new Database(sqliteDbPath);
     const localDb = drizzle(sqliteDb, { schema });
     seedDatabase(localDb)

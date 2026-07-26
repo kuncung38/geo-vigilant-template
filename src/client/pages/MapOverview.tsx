@@ -7,32 +7,35 @@ export function MapOverview() {
   const [searchQuery, setSearchQuery] = useState("");
   const [zoomLevel, setZoomLevel] = useState(1);
 
-  const displayNodes = nodes || [
-    {
-      id: "NODE-C4-A1",
-      name: "Cianjur Sektor 4",
-      latitude: -6.8168,
-      longitude: 107.1425,
-      overallCondition: "Normal" as const,
-      updatedAt: Date.now(),
-    },
-    {
-      id: "NODE-S1-B2",
-      name: "Sumedang Zona B",
-      latitude: -6.858,
-      longitude: 107.92,
-      overallCondition: "Warning" as const,
-      updatedAt: Date.now(),
-    },
-    {
-      id: "NODE-G2-D1",
-      name: "Garut Sektor Delta",
-      latitude: -7.21,
-      longitude: 107.9,
-      overallCondition: "Danger" as const,
-      updatedAt: Date.now(),
-    },
-  ];
+  const displayNodes =
+    nodes && nodes.length > 0
+      ? nodes
+      : [
+          {
+            id: "NODE-C4-A1",
+            name: "Cianjur Sektor 4",
+            latitude: -6.8168,
+            longitude: 107.1425,
+            overallCondition: "Normal" as const,
+            updatedAt: Date.now(),
+          },
+          {
+            id: "NODE-S1-B2",
+            name: "Sumedang Zona B",
+            latitude: -6.858,
+            longitude: 107.92,
+            overallCondition: "Warning" as const,
+            updatedAt: Date.now(),
+          },
+          {
+            id: "NODE-G2-D1",
+            name: "Garut Sektor Delta",
+            latitude: -7.21,
+            longitude: 107.9,
+            overallCondition: "Danger" as const,
+            updatedAt: Date.now(),
+          },
+        ];
 
   const filteredNodes = displayNodes.filter(
     (n) =>

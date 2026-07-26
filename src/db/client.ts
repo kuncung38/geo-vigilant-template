@@ -1,4 +1,3 @@
-import { drizzle as drizzleBun } from "drizzle-orm/bun-sqlite";
 import { drizzle as drizzleD1 } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
@@ -9,7 +8,8 @@ export function getDb(db: any) {
     typeof db?.exec === "function" &&
     !db?.batch
   ) {
-    return drizzleBun(db, { schema });
+    const pkg = "drizzle-orm/" + "bun-sqlite";
+    return require(pkg).drizzle(db, { schema });
   }
   return drizzleD1(db, { schema });
 }
