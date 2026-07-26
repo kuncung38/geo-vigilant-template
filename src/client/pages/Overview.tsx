@@ -44,7 +44,11 @@ export function Overview() {
         >
           <span
             className={`w-4 h-4 rounded-full animate-pulse ${
-              isSafe ? "bg-emerald-500" : isWarning ? "bg-orange-500" : "bg-red-500"
+              isSafe
+                ? "bg-emerald-500"
+                : isWarning
+                  ? "bg-orange-500"
+                  : "bg-red-500"
             }`}
           />
           <span className="font-headline-sm font-bold text-lg tracking-wide">
@@ -87,13 +91,20 @@ export function Overview() {
               <span className="font-label-caps text-xs font-bold text-on-surface-variant">
                 RADON (BQ/M³)
               </span>
-              <span className="material-symbols-outlined text-primary" data-icon="radiation">
+              <span
+                className="material-symbols-outlined text-primary"
+                data-icon="radiation"
+              >
                 mediation
               </span>
             </div>
             <div className="flex flex-col items-center">
               <div className="relative w-32 h-32 flex items-center justify-center mb-2">
-                <svg className="w-full h-full transform -rotate-90">
+                <svg
+                  className="w-full h-full transform -rotate-90"
+                  role="img"
+                  aria-label="Radon concentration gauge"
+                >
                   <circle
                     className="text-surface-container-high"
                     cx="64"
@@ -115,7 +126,9 @@ export function Overview() {
                     strokeWidth="8"
                   />
                 </svg>
-                <span className="absolute font-data-mono text-3xl font-bold">145</span>
+                <span className="absolute font-data-mono text-3xl font-bold">
+                  145
+                </span>
               </div>
               <div className="flex justify-between w-full font-data-mono text-[10px] text-outline">
                 <span>MIN: 120</span>
@@ -130,7 +143,10 @@ export function Overview() {
               <span className="font-label-caps text-xs font-bold text-on-surface-variant">
                 KELEMBABAN TANAH (%)
               </span>
-              <span className="material-symbols-outlined text-primary" data-icon="opacity">
+              <span
+                className="material-symbols-outlined text-primary"
+                data-icon="opacity"
+              >
                 opacity
               </span>
             </div>
@@ -158,7 +174,10 @@ export function Overview() {
               <span className="font-label-caps text-xs font-bold text-on-surface-variant">
                 PERGERAKAN (GYRO)
               </span>
-              <span className="material-symbols-outlined text-primary" data-icon="explore">
+              <span
+                className="material-symbols-outlined text-primary"
+                data-icon="explore"
+              >
                 explore
               </span>
             </div>
@@ -169,9 +188,12 @@ export function Overview() {
                   <div className="w-2 h-2 bg-red-500 rounded-full" />
                 </div>
               </div>
-              <span className="font-data-mono text-lg font-bold mt-4">0.02° / 0.1°</span>
+              <span className="font-data-mono text-lg font-bold mt-4">
+                0.02° / 0.1°
+              </span>
               <p className="text-[10px] text-on-surface-variant font-bold mt-1">
-                Guncangan Terdeteksi: <span className="text-emerald-600">SANGAT RENDAH</span>
+                Guncangan Terdeteksi:{" "}
+                <span className="text-emerald-600">SANGAT RENDAH</span>
               </p>
             </div>
           </div>
@@ -182,13 +204,18 @@ export function Overview() {
               <span className="font-label-caps text-xs font-bold text-on-surface-variant">
                 CURAH HUJAN (MM/H)
               </span>
-              <span className="material-symbols-outlined text-primary" data-icon="umbrella">
+              <span
+                className="material-symbols-outlined text-primary"
+                data-icon="umbrella"
+              >
                 umbrella
               </span>
             </div>
             <div className="mt-2">
               <span className="font-data-mono text-3xl font-bold">2.4</span>
-              <p className="font-body-md text-on-surface-variant">Hujan Ringan</p>
+              <p className="font-body-md text-on-surface-variant">
+                Hujan Ringan
+              </p>
               <div className="mt-8 grid grid-cols-7 gap-1">
                 <div className="h-8 bg-surface-container-high rounded-sm" />
                 <div className="h-10 bg-surface-container-high rounded-sm" />
@@ -227,7 +254,10 @@ export function Overview() {
               type="button"
               className="bg-surface border border-outline-variant p-2 rounded-lg hover:bg-surface-container-low transition-colors"
             >
-              <span className="material-symbols-outlined text-[20px]" data-icon="filter_list">
+              <span
+                className="material-symbols-outlined text-[20px]"
+                data-icon="filter_list"
+              >
                 filter_list
               </span>
             </button>
@@ -246,22 +276,46 @@ export function Overview() {
                     arrow_drop_down
                   </span>
                 </th>
-                <th className="px-6 py-4 border-b border-outline-variant">LOKASI</th>
-                <th className="px-6 py-4 border-b border-outline-variant">RADON</th>
-                <th className="px-6 py-4 border-b border-outline-variant">KELEMBABAN</th>
-                <th className="px-6 py-4 border-b border-outline-variant">GYRO</th>
-                <th className="px-6 py-4 border-b border-outline-variant">HUJAN</th>
-                <th className="px-6 py-4 border-b border-outline-variant text-center">STATUS</th>
+                <th className="px-6 py-4 border-b border-outline-variant">
+                  LOKASI
+                </th>
+                <th className="px-6 py-4 border-b border-outline-variant">
+                  RADON
+                </th>
+                <th className="px-6 py-4 border-b border-outline-variant">
+                  KELEMBABAN
+                </th>
+                <th className="px-6 py-4 border-b border-outline-variant">
+                  GYRO
+                </th>
+                <th className="px-6 py-4 border-b border-outline-variant">
+                  HUJAN
+                </th>
+                <th className="px-6 py-4 border-b border-outline-variant text-center">
+                  STATUS
+                </th>
               </tr>
             </thead>
             <tbody className="font-data-mono text-sm">
               <tr className="hover:bg-surface-container-low transition-colors">
-                <td className="px-6 py-4 border-b border-outline-variant">2026-07-26 14:30:00</td>
-                <td className="px-6 py-4 border-b border-outline-variant">{primaryNode.id}</td>
-                <td className="px-6 py-4 border-b border-outline-variant">145.2</td>
-                <td className="px-6 py-4 border-b border-outline-variant">42.8%</td>
-                <td className="px-6 py-4 border-b border-outline-variant">0.02°</td>
-                <td className="px-6 py-4 border-b border-outline-variant">2.4 mm</td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  2026-07-26 14:30:00
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  {primaryNode.id}
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  145.2
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  42.8%
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  0.02°
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  2.4 mm
+                </td>
                 <td className="px-6 py-4 border-b border-outline-variant text-center">
                   <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">
                     NORMAL
@@ -269,14 +323,24 @@ export function Overview() {
                 </td>
               </tr>
               <tr className="hover:bg-surface-container-low transition-colors">
-                <td className="px-6 py-4 border-b border-outline-variant">2026-07-26 14:15:00</td>
-                <td className="px-6 py-4 border-b border-outline-variant">{primaryNode.id}</td>
-                <td className="px-6 py-4 border-b border-outline-variant">158.4</td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  2026-07-26 14:15:00
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  {primaryNode.id}
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  158.4
+                </td>
                 <td className="px-6 py-4 border-b border-outline-variant text-orange-600 font-bold">
                   78.5%
                 </td>
-                <td className="px-6 py-4 border-b border-outline-variant">0.05°</td>
-                <td className="px-6 py-4 border-b border-outline-variant">12.2 mm</td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  0.05°
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  12.2 mm
+                </td>
                 <td className="px-6 py-4 border-b border-outline-variant text-center">
                   <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full font-bold text-[10px]">
                     WARNING
@@ -284,12 +348,24 @@ export function Overview() {
                 </td>
               </tr>
               <tr className="hover:bg-surface-container-low transition-colors">
-                <td className="px-6 py-4 border-b border-outline-variant">2026-07-26 14:00:00</td>
-                <td className="px-6 py-4 border-b border-outline-variant">{primaryNode.id}</td>
-                <td className="px-6 py-4 border-b border-outline-variant">142.1</td>
-                <td className="px-6 py-4 border-b border-outline-variant">41.2%</td>
-                <td className="px-6 py-4 border-b border-outline-variant">0.01°</td>
-                <td className="px-6 py-4 border-b border-outline-variant">1.8 mm</td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  2026-07-26 14:00:00
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  {primaryNode.id}
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  142.1
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  41.2%
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  0.01°
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  1.8 mm
+                </td>
                 <td className="px-6 py-4 border-b border-outline-variant text-center">
                   <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px]">
                     NORMAL
@@ -297,14 +373,24 @@ export function Overview() {
                 </td>
               </tr>
               <tr className="hover:bg-surface-container-low transition-colors">
-                <td className="px-6 py-4 border-b border-outline-variant">2026-07-26 13:45:00</td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  2026-07-26 13:45:00
+                </td>
                 <td className="px-6 py-4 border-b border-outline-variant text-red-600 font-bold">
                   ALERT: {primaryNode.id}
                 </td>
-                <td className="px-6 py-4 border-b border-outline-variant">412.2</td>
-                <td className="px-6 py-4 border-b border-outline-variant">92.1%</td>
-                <td className="px-6 py-4 border-b border-outline-variant">1.45°</td>
-                <td className="px-6 py-4 border-b border-outline-variant">45.5 mm</td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  412.2
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  92.1%
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  1.45°
+                </td>
+                <td className="px-6 py-4 border-b border-outline-variant">
+                  45.5 mm
+                </td>
                 <td className="px-6 py-4 border-b border-outline-variant text-center">
                   <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-bold text-[10px]">
                     DANGER

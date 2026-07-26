@@ -50,7 +50,7 @@ describe("useTelemetry Hook", () => {
         } as Response;
       }
       return { ok: false, statusText: "Not Found", status: 404 } as Response;
-    });
+    }) as unknown as typeof fetch;
   });
 
   afterEach(() => {
@@ -67,6 +67,9 @@ describe("useTelemetry Hook", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data).toEqual(mockTelemetry);
-    expect(global.fetch).toHaveBeenCalledWith("/api/telemetry?nodeId=NODE-001&limit=50", undefined);
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/telemetry?nodeId=NODE-001&limit=50",
+      undefined,
+    );
   });
 });

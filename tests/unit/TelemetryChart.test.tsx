@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it } from "vitest";
-import { TelemetryChart } from "../../src/client/components/TelemetryChart";
 import type { TelemetryLog } from "../../src/client/api/client";
+import { TelemetryChart } from "../../src/client/components/TelemetryChart";
 
 beforeAll(() => {
   global.ResizeObserver = class ResizeObserver {

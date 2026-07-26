@@ -40,7 +40,7 @@ describe("MapOverview Page Component", () => {
           updatedAt: Date.now(),
         },
       ],
-    }));
+    })) as unknown as typeof fetch;
   });
 
   it("renders the map title, zone markers, and legend", async () => {

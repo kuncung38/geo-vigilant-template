@@ -42,9 +42,13 @@ export function AlertSystem({ nodes = [] }: AlertSystemProps) {
                 </span>
                 <div>
                   <h4 className="font-headline-sm text-xs font-bold uppercase tracking-wider">
-                    {isDanger ? "PERINGATAN KRITIS (DANGER)" : "PERINGATAN SISTEM (WARNING)"}
+                    {isDanger
+                      ? "PERINGATAN KRITIS (DANGER)"
+                      : "PERINGATAN SISTEM (WARNING)"}
                   </h4>
-                  <p className="font-body-md text-sm font-bold mt-0.5">{node.name}</p>
+                  <p className="font-body-md text-sm font-bold mt-0.5">
+                    {node.name}
+                  </p>
                 </div>
               </div>
               <button
@@ -52,7 +56,10 @@ export function AlertSystem({ nodes = [] }: AlertSystemProps) {
                 onClick={() => setDismissedIds((prev) => [...prev, node.id])}
                 className="text-white/60 hover:text-white transition-colors"
               >
-                <span className="material-symbols-outlined text-base" data-icon="close">
+                <span
+                  className="material-symbols-outlined text-base"
+                  data-icon="close"
+                >
                   close
                 </span>
               </button>
@@ -64,7 +71,10 @@ export function AlertSystem({ nodes = [] }: AlertSystemProps) {
                 className="px-3 py-1 rounded bg-white/20 hover:bg-white/30 text-white font-bold transition-all text-center flex items-center gap-1"
               >
                 <span>Diagnostik</span>
-                <span className="material-symbols-outlined text-xs" data-icon="arrow_forward">
+                <span
+                  className="material-symbols-outlined text-xs"
+                  data-icon="arrow_forward"
+                >
                   arrow_forward
                 </span>
               </Link>

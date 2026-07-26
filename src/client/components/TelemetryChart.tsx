@@ -120,7 +120,10 @@ export function TelemetryChart({ logs = [], isLoading }: TelemetryChartProps) {
                   : "bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low"
               }`}
             >
-              <span className="material-symbols-outlined text-[18px]" data-icon={config.icon}>
+              <span
+                className="material-symbols-outlined text-[18px]"
+                data-icon={config.icon}
+              >
                 {config.icon}
               </span>
               <span className="font-label-caps uppercase tracking-wider text-left">
@@ -142,7 +145,8 @@ export function TelemetryChart({ logs = [], isLoading }: TelemetryChartProps) {
               </span>
             </h3>
             <p className="text-xs text-on-surface-variant">
-              Visualisasi tren sensor waktu nyata dengan ambang batas keselamatan
+              Visualisasi tren sensor waktu nyata dengan ambang batas
+              keselamatan
             </p>
           </div>
           <div className="flex items-center gap-4 text-xs font-data-mono">
@@ -162,15 +166,36 @@ export function TelemetryChart({ logs = [], isLoading }: TelemetryChartProps) {
 
         <div className="h-80 w-full font-data-mono text-xs">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <AreaChart
+              data={chartData}
+              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            >
               <defs>
-                <linearGradient id={`color-${selectedSensor}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={currentConfig.color} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={currentConfig.color} stopOpacity={0.0} />
+                <linearGradient
+                  id={`color-${selectedSensor}`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop
+                    offset="5%"
+                    stopColor={currentConfig.color}
+                    stopOpacity={0.3}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor={currentConfig.color}
+                    stopOpacity={0.0}
+                  />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="timestamp" stroke="#76777d" tick={{ fontSize: 10 }} />
+              <XAxis
+                dataKey="timestamp"
+                stroke="#76777d"
+                tick={{ fontSize: 10 }}
+              />
               <YAxis stroke="#76777d" tick={{ fontSize: 10 }} />
               <Tooltip
                 contentStyle={{
@@ -183,9 +208,15 @@ export function TelemetryChart({ logs = [], isLoading }: TelemetryChartProps) {
                 }}
               />
               {chartData.length > 0 &&
-                chartData[0][currentConfig.maxKey as keyof (typeof chartData)[0]] !== undefined && (
+                chartData[0][
+                  currentConfig.maxKey as keyof (typeof chartData)[0]
+                ] !== undefined && (
                   <ReferenceLine
-                    y={chartData[0][currentConfig.maxKey as keyof (typeof chartData)[0]] as number}
+                    y={
+                      chartData[0][
+                        currentConfig.maxKey as keyof (typeof chartData)[0]
+                      ] as number
+                    }
                     label={{
                       value: "Max Threshold",
                       fill: "#ef4444",

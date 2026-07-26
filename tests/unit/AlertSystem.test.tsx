@@ -2,8 +2,8 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
-import { AlertSystem } from "../../src/client/components/AlertSystem";
 import type { MonitoringNode } from "../../src/client/api/client";
+import { AlertSystem } from "../../src/client/components/AlertSystem";
 
 const mockNodes: MonitoringNode[] = [
   {
