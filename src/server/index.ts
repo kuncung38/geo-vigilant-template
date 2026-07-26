@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import nodesRoute from "./routes/nodes";
 import telemetryRoute from "./routes/telemetry";
 import type { AppEnv } from "./types";
 
@@ -8,6 +9,7 @@ app.get("/api/health", (c) => {
   return c.json({ status: "ok" });
 });
 
+app.route("/api/nodes", nodesRoute);
 app.route("/api/telemetry", telemetryRoute);
 
 app.notFound((c) => {
